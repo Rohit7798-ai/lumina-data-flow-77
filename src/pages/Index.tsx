@@ -5,7 +5,7 @@ import DataVisualization from '@/components/DataVisualization';
 import DataSummary from '@/components/DataSummary';
 import Charts from '@/components/Charts';
 import useDataProcessing from '@/hooks/useDataProcessing';
-import { BarChart3, PieChart, ScatterChart, Database, Github, SunMoon, LineChart } from 'lucide-react';
+import { BarChart3, PieChart, Database, Github, SunMoon, LineChart } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -20,8 +20,7 @@ const Index = () => {
     processData
   } = useDataProcessing();
   
-  const [visType, setVisType] = useState<'scatter' | 'bar'>('scatter');
-  const [chartType, setChartType] = useState<'3d' | 'line' | 'bar' | 'pie'>('3d');
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
   
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -84,16 +83,9 @@ const Index = () => {
                 <div className="glass px-4 py-3 rounded-lg">
                   <RadioGroup 
                     value={chartType} 
-                    onValueChange={(value) => setChartType(value as any)}
+                    onValueChange={(value) => setChartType(value as 'line' | 'bar' | 'pie')}
                     className="flex items-center gap-4"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem id="3d" value="3d" />
-                      <label htmlFor="3d" className="text-sm cursor-pointer flex items-center gap-1">
-                        <ScatterChart className="h-4 w-4" />
-                        <span>3D</span>
-                      </label>
-                    </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem id="line" value="line" />
                       <label htmlFor="line" className="text-sm cursor-pointer flex items-center gap-1">
@@ -117,61 +109,16 @@ const Index = () => {
                     </div>
                   </RadioGroup>
                 </div>
-                
-                {/* 3D Visualization Type Selector (only show if 3D is selected) */}
-                {chartType === '3d' && (
-                  <div className="glass px-2 py-1 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setVisType('scatter')}
-                        className={cn(
-                          "p-2 rounded-md transition-colors",
-                          visType === 'scatter' 
-                            ? "bg-neon-purple/20 text-neon-purple" 
-                            : "text-white/60 hover:text-white hover:bg-white/5"
-                        )}
-                      >
-                        <ScatterChart className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setVisType('bar')}
-                        className={cn(
-                          "p-2 rounded-md transition-colors",
-                          visType === 'bar' 
-                            ? "bg-neon-cyan/20 text-neon-cyan" 
-                            : "text-white/60 hover:text-white hover:bg-white/5"
-                        )}
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 relative">
-                  {chartType === '3d' ? (
-                    <DataVisualization 
-                      data={visualizationData}
-                      type={visType}
-                      isLoading={isProcessing}
-                      className="h-[500px]"
-                    />
-                  ) : (
-                    <Charts 
-                      data={rawData}
-                      type={chartType as 'line' | 'bar' | 'pie'}
-                      isLoading={isProcessing}
-                      className="h-[500px]"
-                    />
-                  )}
-                  
-                  {chartType === '3d' && (
-                    <div className="absolute bottom-4 left-4 glass px-3 py-1 rounded-md text-xs text-white/70">
-                      <span>Tip: Click and drag to rotate. Scroll to zoom.</span>
-                    </div>
-                  )}
+                  <Charts 
+                    data={rawData}
+                    type={chartType}
+                    isLoading={isProcessing}
+                    className="h-[500px]"
+                  />
                 </div>
                 
                 <div className="space-y-6">

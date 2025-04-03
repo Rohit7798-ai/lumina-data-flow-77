@@ -107,7 +107,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   }
 
   // Calculate animation values for 3D effects
-  const animatedData = chartData.map((item, index) => {
+  const animatedData = chartData.map((item) => {
     const result: Record<string, any> = { name: item.name };
     
     fields.forEach(field => {
@@ -116,6 +116,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     
     return result;
   });
+
+  // Custom Legend formatter to prevent text overlapping
+  const customLegendFormatter = (value: string) => {
+    const maxLength = 8; // Shorter to prevent overlapping
+    const displayValue = value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
+    return <span title={value} className="text-xs">{displayValue}</span>;
+  };
 
   return (
     <div className={cn("w-full h-[400px] rounded-xl overflow-hidden glass p-4 relative", className)}>
@@ -137,15 +144,17 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               }} 
             />
             <Legend 
+              formatter={customLegendFormatter}
               layout="horizontal"
               verticalAlign="top"
               wrapperStyle={{
                 paddingBottom: 10,
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                paddingLeft: 10, 
+                paddingRight: 10
               }}
-              formatter={(value) => <span title={value}>{value.length > 12 ? `${value.substring(0, 10)}...` : value}</span>}
             />
             {fields.map((field, index) => (
               <Line 
@@ -179,15 +188,17 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               }} 
             />
             <Legend 
+              formatter={customLegendFormatter}
               layout="horizontal"
               verticalAlign="top"
               wrapperStyle={{
                 paddingBottom: 10, 
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                paddingLeft: 10, 
+                paddingRight: 10
               }}
-              formatter={(value) => <span title={value}>{value.length > 12 ? `${value.substring(0, 10)}...` : value}</span>}
             />
             {fields.map((field, index) => (
               <Bar 
@@ -202,7 +213,9 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             ))}
           </BarChart>
         ) : (
-          <PieChart style={{ transform: isAnimating ? `perspective(1200px) rotateY(${180 * (1 - animationProgress)}deg)` : 'none' }}>
+          <PieChart 
+            style={{ transform: isAnimating ? `perspective(1200px) rotateY(${180 * (1 - animationProgress)}deg)` : 'none' }}
+          >
             <Pie
               data={animatedData}
               dataKey="value"
@@ -211,8 +224,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               cy="50%"
               outerRadius={120 * animationProgress}
               innerRadius={60 * animationProgress}
-              label={(entry) => entry.name.length > 10 ? `${entry.name.substring(0, 8)}...` : entry.name}
-              labelLine={true}
+              labelLine={false}
+              label={(entry) => {
+                if (entry.name.length > 8) {
+                  return `${entry.name.substring(0, 6)}...`;
+                }
+                return entry.name;
+              }}
             >
               {chartData.map((entry, index) => (
                 <Cell 
@@ -231,16 +249,19 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 borderRadius: '4px',
                 color: '#fff' 
               }} 
+              formatter={(value, name) => [value, name]}
             />
             <Legend 
+              formatter={customLegendFormatter}
               layout="horizontal"
               verticalAlign="bottom"
               wrapperStyle={{
                 overflowX: 'auto',
                 overflowY: 'hidden',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                paddingLeft: 10, 
+                paddingRight: 10
               }}
-              formatter={(value) => <span title={value}>{value.length > 12 ? `${value.substring(0, 10)}...` : value}</span>}
             />
           </PieChart>
         )}
@@ -248,7 +269,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       
       {isAnimating && (
         <div className="absolute top-2 right-2 glass px-2 py-1 rounded-md text-xs text-white/70 animate-fade-in">
-          <span>Rendering 3D view...</span>
+          <span>Rendering view...</span>
         </div>
       )}
     </div>
