@@ -11,6 +11,7 @@ import { BarChart3, PieChart, Database, Github, SunMoon, LineChart } from 'lucid
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from 'sonner';
 
 const Index = () => {
   const { 
@@ -31,15 +32,22 @@ const Index = () => {
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
   const [showFilters, setShowFilters] = useState(false);
   
+  const handleChartTypeChange = (value: string) => {
+    setChartType(value as 'line' | 'bar' | 'pie');
+    toast(`Chart type changed to ${value}`);
+  };
+  
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
       <header className="glass border-b border-white/10 py-4 px-6 z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Database className="h-6 w-6 text-neon-blue animate-pulse-glow" />
-            <h1 className="text-xl font-bold text-gradient">
-              Lumina<span className="text-neon-cyan">Viz</span>
+            <Database className="h-6 w-6 text-neon-cyan animate-pulse-glow" />
+            <h1 className="text-xl font-bold">
+              <span className="bg-gradient-to-br from-neon-cyan via-neon-blue to-neon-purple bg-clip-text text-transparent">
+                LuminaViz
+              </span>
             </h1>
           </div>
           
@@ -66,7 +74,9 @@ const Index = () => {
           {rawData.length === 0 && (
             <div className="text-center py-12">
               <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-                <span className="text-gradient">Transform Your Data</span>
+                <span className="bg-gradient-to-r from-neon-purple via-neon-cyan to-neon-pink bg-clip-text text-transparent">
+                  Transform Your Data
+                </span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-xl mx-auto mb-8">
                 Upload your data and explore powerful visualizations with detailed insights
@@ -86,47 +96,56 @@ const Index = () => {
           {(rawData.length > 0 || isProcessing) && (
             <section className="space-y-6">
               <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                <h2 className="text-2xl font-bold text-gradient">Data Visualization</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
+                  Data Visualization
+                </h2>
                 
                 {/* Chart Controls */}
                 <div className="flex flex-wrap gap-4">
                   {/* Filter Toggle Button */}
                   <button
-                    onClick={() => setShowFilters(!showFilters)}
+                    onClick={() => {
+                      setShowFilters(!showFilters);
+                      if (!showFilters) {
+                        toast.info('Filter panel opened');
+                      }
+                    }}
                     className={cn(
                       "glass px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors",
                       showFilters ? "bg-white/20" : "hover:bg-white/10"
                     )}
                   >
                     {showFilters ? "Hide Filters" : "Show Filters"} 
-                    <span className="glass px-2 py-0.5 rounded-full text-xs">{filters.length}</span>
+                    {filters.length > 0 && (
+                      <span className="glass px-2 py-0.5 rounded-full text-xs bg-neon-purple/20">{filters.length}</span>
+                    )}
                   </button>
                   
                   {/* Chart Type Selector */}
                   <div className="glass px-4 py-2 rounded-lg">
                     <RadioGroup 
                       value={chartType} 
-                      onValueChange={(value) => setChartType(value as 'line' | 'bar' | 'pie')}
+                      onValueChange={handleChartTypeChange}
                       className="flex items-center gap-4"
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem id="line" value="line" />
                         <label htmlFor="line" className="text-sm cursor-pointer flex items-center gap-1">
-                          <LineChart className="h-4 w-4" />
+                          <LineChart className="h-4 w-4 text-neon-blue" />
                           <span>Line</span>
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem id="bar" value="bar" />
                         <label htmlFor="bar" className="text-sm cursor-pointer flex items-center gap-1">
-                          <BarChart3 className="h-4 w-4" />
+                          <BarChart3 className="h-4 w-4 text-neon-cyan" />
                           <span>Bar</span>
                         </label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem id="pie" value="pie" />
                         <label htmlFor="pie" className="text-sm cursor-pointer flex items-center gap-1">
-                          <PieChart className="h-4 w-4" />
+                          <PieChart className="h-4 w-4 text-neon-pink" />
                           <span>Pie</span>
                         </label>
                       </div>
@@ -137,14 +156,16 @@ const Index = () => {
               
               {/* Filters Panel */}
               {showFilters && (
-                <FilterPanel
-                  columns={availableColumns}
-                  onAddFilter={addFilter}
-                  onRemoveFilter={removeFilter}
-                  onClearFilters={clearFilters}
-                  activeFilters={filters}
-                  className="mb-4"
-                />
+                <div className="animate-chart-fade-in">
+                  <FilterPanel
+                    columns={availableColumns}
+                    onAddFilter={addFilter}
+                    onRemoveFilter={removeFilter}
+                    onClearFilters={clearFilters}
+                    activeFilters={filters}
+                    className="mb-4 glass"
+                  />
+                </div>
               )}
               
               {/* Data Dashboard */}
@@ -173,6 +194,17 @@ const Index = () => {
                   />
                 </div>
               </div>
+              
+              <div className="mt-10">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-neon-blue to-neon-cyan bg-clip-text text-transparent mb-4">
+                  3D Data Visualization
+                </h3>
+                <DataVisualization 
+                  data={visualizationData}
+                  isLoading={isProcessing}
+                  className="h-[400px] w-full"
+                />
+              </div>
             </section>
           )}
         </div>
@@ -185,9 +217,9 @@ const Index = () => {
             © 2025 LuminaViz. All rights reserved.
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
-            <a href="#" className="hover:text-white transition-colors">Contact</a>
+            <a href="#" className="hover:text-neon-cyan transition-colors">Privacy</a>
+            <a href="#" className="hover:text-neon-cyan transition-colors">Terms</a>
+            <a href="#" className="hover:text-neon-cyan transition-colors">Contact</a>
           </div>
         </div>
       </footer>

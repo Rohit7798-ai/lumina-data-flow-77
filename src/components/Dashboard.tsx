@@ -19,7 +19,9 @@ import {
   Cell,
   Tooltip as RechartsTooltip,
   AreaChart,
-  Area
+  Area,
+  BarChart as RechartBarChart,
+  Bar
 } from 'recharts';
 import { Tabs as ShadTabs } from "@radix-ui/react-tabs"
 import { Button } from './ui/button';
@@ -268,7 +270,7 @@ const Dashboard = ({ data, statistics, isLoading = false }: DashboardProps) => {
               <CardContent className="p-0">
                 <div className="h-[400px] p-4">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
+                    <RechartBarChart
                       data={chartData}
                       margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                     >
@@ -312,7 +314,7 @@ const Dashboard = ({ data, statistics, isLoading = false }: DashboardProps) => {
                           activeDot={{ r: 6, stroke: '#fff', strokeWidth: 1 }}
                         />
                       ))}
-                    </BarChart>
+                    </RechartBarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
@@ -465,7 +467,7 @@ const Dashboard = ({ data, statistics, isLoading = false }: DashboardProps) => {
                 <CardContent className="p-0">
                   <div className="h-[300px] p-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
+                      <RechartBarChart
                         data={data}
                         margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                       >
@@ -503,7 +505,7 @@ const Dashboard = ({ data, statistics, isLoading = false }: DashboardProps) => {
                           stroke={COLORS[Object.keys(distributionData).indexOf(column) % COLORS.length]}
                           fill={`${COLORS[Object.keys(distributionData).indexOf(column) % COLORS.length]}40`}
                         />
-                      </BarChart>
+                      </RechartBarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>

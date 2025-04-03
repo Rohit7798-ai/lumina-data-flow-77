@@ -71,7 +71,14 @@ export default {
 					purple: '#8B5CF6',
 					green: '#80FFDB',
 					orange: '#FF9F1C',
-					yellow: '#FFD166'
+					yellow: '#FFD166',
+					red: '#FF5E5B',
+					magenta: '#FF36AB',
+					turquoise: '#06D6A0',
+					violet: '#9D4EDD',
+					indigo: '#7209B7',
+					amber: '#FB8500',
+					emerald: '#2DC653'
 				},
 				chart: {
 					purple: '#8B5CF6',
@@ -82,6 +89,14 @@ export default {
 					orange: '#FF9F1C',
 					'deep-purple': '#7400B8',
 					mint: '#80FFDB',
+					yellow: '#FFD166',
+					red: '#FF5E5B',
+					magenta: '#FF36AB',
+					turquoise: '#06D6A0',
+					violet: '#9D4EDD',
+					indigo: '#7209B7',
+					amber: '#FB8500',
+					emerald: '#2DC653'
 				}
 			},
 			borderRadius: {
@@ -110,6 +125,19 @@ export default {
 					'0%': { backgroundPosition: '0% 50%' },
 					'50%': { backgroundPosition: '100% 50%' },
 					'100%': { backgroundPosition: '0% 50%' }
+				},
+				'data-glow': {
+					'0%': { boxShadow: '0 0 5px rgba(139, 92, 246, 0.5)' },
+					'50%': { boxShadow: '0 0 20px rgba(0, 255, 255, 0.6), 0 0 30px rgba(255, 16, 240, 0.4)' },
+					'100%': { boxShadow: '0 0 5px rgba(139, 92, 246, 0.5)' }
+				},
+				'chart-fade-in': {
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'shimmer': {
+					'0%': { backgroundPosition: '-1000px 0' },
+					'100%': { backgroundPosition: '1000px 0' }
 				}
 			},
 			animation: {
@@ -117,11 +145,16 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
 				'float': 'float 6s ease-in-out infinite',
-				'gradient-shift': 'gradient-shift 15s ease infinite'
+				'gradient-shift': 'gradient-shift 15s ease infinite',
+				'data-glow': 'data-glow 8s ease-in-out infinite',
+				'chart-fade-in': 'chart-fade-in 0.5s ease-out',
+				'shimmer': 'shimmer 2s infinite linear'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'grid-pattern': 'linear-gradient(to right, #1A1F2C 1px, transparent 1px), linear-gradient(to bottom, #1A1F2C 1px, transparent 1px)'
+				'grid-pattern': 'linear-gradient(to right, #1A1F2C 1px, transparent 1px), linear-gradient(to bottom, #1A1F2C 1px, transparent 1px)',
+				'data-shimmer': 'linear-gradient(to right, rgba(255,255,255,0) 0, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 100%)',
+				'neon-glow': 'linear-gradient(120deg, #8B5CF6, #00FFFF, #FF10F0)'
 			}
 		}
 	},

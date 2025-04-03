@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { LineChart, BarChart, PieChart, Line, Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { cn } from '@/lib/utils';
@@ -10,11 +9,29 @@ type ChartsProps = {
   isLoading?: boolean;
 };
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const COLORS = [
+  '#8B5CF6', // Purple
+  '#00FFFF', // Cyan
+  '#FF10F0', // Pink
+  '#1EAEDB', // Blue
+  '#64DFDF', // Teal
+  '#FF9F1C', // Orange
+  '#7400B8', // Deep purple
+  '#80FFDB', // Mint
+  '#FFD166', // Yellow
+  '#FF5E5B', // Red
+  '#FF36AB', // Magenta
+  '#06D6A0', // Turquoise
+  '#9D4EDD', // Violet
+  '#7209B7', // Indigo
+  '#FB8500', // Amber
+  '#2DC653'  // Emerald
+];
 
 const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
+  const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
   
   // Animation effect
   useEffect(() => {
@@ -50,7 +67,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       const firstRow = data[0];
       const keys = Object.keys(firstRow).filter(key => 
         typeof firstRow[key] === 'number' || !isNaN(Number(firstRow[key]))
-      ).slice(0, 5); // Limit to 5 keys for pie chart
+      ).slice(0, 8); // Limit to 8 keys for pie chart
       
       return keys.map(key => ({
         name: key,
@@ -59,8 +76,8 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     }
     
     // For line and bar charts, keep the original structure but limit to 20 rows
-    return data.slice(0, 20).map(row => {
-      const result: Record<string, any> = { name: '' };
+    return data.slice(0, 20).map((row, index) => {
+      const result: Record<string, any> = { name: `Item ${index + 1}`, id: index };
       
       // Try to find a suitable name property
       const nameField = Object.keys(row).find(key => 
@@ -85,14 +102,20 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   const fields = React.useMemo(() => {
     if (!chartData.length) return [];
     const firstRow = chartData[0];
-    return Object.keys(firstRow).filter(key => key !== 'name').slice(0, 3);
+    return Object.keys(firstRow).filter(key => key !== 'name' && key !== 'id').slice(0, 5);
   }, [chartData]);
   
   // Render loading state
   if (isLoading) {
     return (
-      <div className={cn("w-full h-[400px] rounded-xl overflow-hidden glass flex items-center justify-center", className)}>
-        <div className="text-white/50">Loading chart...</div>
+      <div className={cn(
+        "w-full h-[400px] rounded-xl overflow-hidden glass flex items-center justify-center", 
+        className
+      )}>
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-12 h-12 rounded-full border-4 border-transparent border-t-neon-cyan border-r-neon-pink animate-spin"></div>
+          <div className="text-white/50">Loading chart...</div>
+        </div>
       </div>
     );
   }
@@ -100,7 +123,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   // Render empty state
   if (!chartData.length) {
     return (
-      <div className={cn("w-full h-[400px] rounded-xl overflow-hidden glass flex items-center justify-center", className)}>
+      <div className={cn(
+        "w-full h-[400px] rounded-xl overflow-hidden glass flex items-center justify-center",
+        className
+      )}>
         <div className="text-white/50">Upload data to visualize</div>
       </div>
     );
@@ -108,7 +134,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
 
   // Calculate animation values for 3D effects
   const animatedData = chartData.map((item) => {
-    const result: Record<string, any> = { name: item.name };
+    const result: Record<string, any> = { 
+      name: item.name, 
+      id: item.id 
+    };
     
     fields.forEach(field => {
       result[field] = item[field] * animationProgress;
@@ -119,29 +148,111 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
 
   // Custom Legend formatter to prevent text overlapping
   const customLegendFormatter = (value: string) => {
-    const maxLength = 8; // Shorter to prevent overlapping
+    const maxLength = 12;
     const displayValue = value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
     return <span title={value} className="text-xs">{displayValue}</span>;
   };
 
+  // Enhanced tooltip that gives more context
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-black/80 p-3 rounded-md backdrop-blur-lg border border-white/10 shadow-xl">
+          <p className="text-white text-sm font-medium mb-1">{label}</p>
+          <div className="space-y-1">
+            {payload.map((entry: any, index: number) => (
+              <div key={`tooltip-item-${index}`} className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: entry.color }}
+                />
+                <p className="text-xs text-white/80">
+                  <span className="text-white font-medium">{entry.name}: </span> 
+                  {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Dynamic dot rendering for line charts
+  const renderDot = (props: any) => {
+    const { cx, cy, index } = props;
+    const isHovered = hoveredDataPoint === index;
+    
+    return (
+      <circle 
+        cx={cx} 
+        cy={cy} 
+        r={isHovered ? 6 : 4}
+        stroke="#fff"
+        strokeWidth={isHovered ? 2 : 1}
+        fill={COLORS[props.dataKey.length % COLORS.length]}
+        style={isHovered ? {
+          filter: `drop-shadow(0 0 6px ${COLORS[props.dataKey.length % COLORS.length]})`
+        } : undefined}
+        onMouseEnter={() => setHoveredDataPoint(index)}
+        onMouseLeave={() => setHoveredDataPoint(null)}
+        className="transition-all duration-300"
+      />
+    );
+  };
+
   return (
-    <div className={cn("w-full h-[400px] rounded-xl overflow-hidden glass p-4 relative", className)}>
+    <div className={cn(
+      "w-full h-[400px] rounded-xl overflow-hidden glass p-4 relative",
+      "transition-all duration-500 ease-out hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]",
+      className
+    )}>
       <ResponsiveContainer width="100%" height="100%">
         {type === 'line' ? (
           <LineChart 
             data={animatedData}
-            style={{ transform: isAnimating ? `perspective(1200px) rotateX(${5 * (1 - animationProgress)}deg)` : 'none' }}
+            className="animate-chart-fade-in"
+            style={{ 
+              transform: isAnimating ? `perspective(1200px) rotateX(${5 * (1 - animationProgress)}deg)` : 'none',
+              transition: 'transform 0.5s ease'
+            }}
+            onMouseMove={(e) => {
+              if (e && e.activeTooltipIndex !== undefined) {
+                setHoveredDataPoint(e.activeTooltipIndex);
+              }
+            }}
+            onMouseLeave={() => setHoveredDataPoint(null)}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-            <XAxis dataKey="name" stroke="#aaa" />
-            <YAxis stroke="#aaa" />
+            <defs>
+              {fields.map((field, index) => (
+                <linearGradient
+                  key={`line-gradient-${field}`}
+                  id={`lineGradient${index}`}
+                  x1="0" y1="0" x2="1" y2="0"
+                >
+                  <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8} />
+                  <stop offset="100%" stopColor={COLORS[(index + 2) % COLORS.length]} stopOpacity={0.8} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.6} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#aaa" 
+              tick={{ fontSize: 11, fill: '#ccc' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+            />
+            <YAxis 
+              stroke="#aaa" 
+              tick={{ fontSize: 11, fill: '#ccc' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+            />
             <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                borderColor: '#555',
-                borderRadius: '4px',
-                color: '#fff' 
-              }} 
+              content={<CustomTooltip />}
+              cursor={{ stroke: '#666', strokeWidth: 1, strokeDasharray: '3 3' }}
             />
             <Legend 
               formatter={customLegendFormatter}
@@ -161,12 +272,16 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 key={field}
                 type="monotone" 
                 dataKey={field} 
-                stroke={COLORS[index % COLORS.length]} 
+                stroke={`url(#lineGradient${index})`}
                 strokeWidth={2}
-                dot={{ stroke: COLORS[index % COLORS.length], strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#fff', strokeWidth: 1 }}
+                dot={renderDot}
+                activeDot={{ r: 8, stroke: '#fff', strokeWidth: 2 }}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
                 style={{
-                  filter: isAnimating ? `drop-shadow(0 0 4px ${COLORS[index % COLORS.length]})` : 'none'
+                  filter: isAnimating ? `drop-shadow(0 0 4px ${COLORS[index % COLORS.length]})` : 'none',
+                  transition: 'filter 0.3s ease'
                 }}
               />
             ))}
@@ -174,18 +289,41 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
         ) : type === 'bar' ? (
           <BarChart 
             data={animatedData}
-            style={{ transform: isAnimating ? `perspective(1200px) rotateX(${10 * (1 - animationProgress)}deg)` : 'none' }}
+            className="animate-chart-fade-in"
+            style={{ 
+              transform: isAnimating ? `perspective(1200px) rotateX(${10 * (1 - animationProgress)}deg)` : 'none',
+              transition: 'transform 0.5s ease' 
+            }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-            <XAxis dataKey="name" stroke="#aaa" />
-            <YAxis stroke="#aaa" />
+            <defs>
+              {fields.map((field, index) => (
+                <linearGradient
+                  key={`bar-gradient-${field}`}
+                  id={`barGradient${index}`}
+                  x1="0" y1="0" x2="0" y2="1"
+                >
+                  <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={1} />
+                  <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.6} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#aaa" 
+              tick={{ fontSize: 11, fill: '#ccc' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+            />
+            <YAxis 
+              stroke="#aaa" 
+              tick={{ fontSize: 11, fill: '#ccc' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+            />
             <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                borderColor: '#555',
-                borderRadius: '4px',
-                color: '#fff' 
-              }} 
+              content={<CustomTooltip />}
+              cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
             />
             <Legend 
               formatter={customLegendFormatter}
@@ -204,18 +342,56 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               <Bar 
                 key={field}
                 dataKey={field} 
-                fill={COLORS[index % COLORS.length]} 
+                fill={`url(#barGradient${index})`}
                 radius={[4, 4, 0, 0]}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
                 style={{
-                  filter: isAnimating ? `drop-shadow(0 0 4px ${COLORS[index % COLORS.length]})` : 'none'
+                  filter: `drop-shadow(0 0 2px ${COLORS[index % COLORS.length]})`
                 }}
-              />
+                onMouseEnter={(data, index) => {
+                  setHoveredDataPoint(index);
+                }}
+                onMouseLeave={() => {
+                  setHoveredDataPoint(null);
+                }}
+              >
+                {animatedData.map((entry, i) => (
+                  <Cell 
+                    key={`cell-${i}`}
+                    filter={hoveredDataPoint === i ? `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]})` : undefined}
+                    style={{
+                      transition: 'filter 0.3s ease, opacity 0.3s ease',
+                      opacity: hoveredDataPoint !== null && hoveredDataPoint !== i ? 0.7 : 1
+                    }}
+                  />
+                ))}
+              </Bar>
             ))}
           </BarChart>
         ) : (
           <PieChart 
-            style={{ transform: isAnimating ? `perspective(1200px) rotateY(${180 * (1 - animationProgress)}deg)` : 'none' }}
+            className="animate-chart-fade-in"
+            style={{ 
+              transform: isAnimating 
+                ? `perspective(1200px) rotateY(${180 * (1 - animationProgress)}deg)` 
+                : 'none',
+              transition: 'transform 0.5s ease'
+            }}
           >
+            <defs>
+              {COLORS.map((color, index) => (
+                <radialGradient
+                  key={`pie-gradient-${index}`}
+                  id={`pieGradient${index}`}
+                  cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                >
+                  <stop offset="0%" stopColor={color} stopOpacity={1} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.7} />
+                </radialGradient>
+              ))}
+            </defs>
             <Pie
               data={animatedData}
               dataKey="value"
@@ -224,32 +400,39 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               cy="50%"
               outerRadius={120 * animationProgress}
               innerRadius={60 * animationProgress}
-              labelLine={false}
-              label={(entry) => {
-                if (entry.name.length > 8) {
-                  return `${entry.name.substring(0, 6)}...`;
-                }
-                return entry.name;
+              labelLine={true}
+              label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+              animationDuration={1500}
+              animationEasing="ease-out"
+              isAnimationActive={isAnimating}
+              onMouseEnter={(data, index) => {
+                setHoveredDataPoint(index);
+              }}
+              onMouseLeave={() => {
+                setHoveredDataPoint(null);
               }}
             >
               {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={COLORS[index % COLORS.length]} 
+                  fill={`url(#pieGradient${index % COLORS.length})`}
                   style={{
-                    filter: isAnimating ? `drop-shadow(0 0 6px ${COLORS[index % COLORS.length]})` : 'none'
+                    filter: hoveredDataPoint === index 
+                      ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` 
+                      : `drop-shadow(0 0 3px ${COLORS[index % COLORS.length]})`,
+                    transition: 'filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease',
+                    opacity: hoveredDataPoint !== null && hoveredDataPoint !== index ? 0.6 : 1,
+                    transform: hoveredDataPoint === index ? 'scale(1.05)' : 'scale(1)'
                   }}
                 />
               ))}
             </Pie>
             <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-                borderColor: '#555',
-                borderRadius: '4px',
-                color: '#fff' 
-              }} 
-              formatter={(value, name) => [value, name]}
+              content={<CustomTooltip />}
+              formatter={(value: any, name: any) => [
+                typeof value === 'number' ? value.toLocaleString() : value, 
+                name
+              ]}
             />
             <Legend 
               formatter={customLegendFormatter}
@@ -268,8 +451,8 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       </ResponsiveContainer>
       
       {isAnimating && (
-        <div className="absolute top-2 right-2 glass px-2 py-1 rounded-md text-xs text-white/70 animate-fade-in">
-          <span>Rendering view...</span>
+        <div className="absolute top-2 right-2 glass px-2 py-1 rounded-md text-xs text-white/70 animate-pulse">
+          <span>Rendering visualization...</span>
         </div>
       )}
     </div>
