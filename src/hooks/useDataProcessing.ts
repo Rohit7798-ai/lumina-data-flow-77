@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export const useDataProcessing = () => {
   const [rawData, setRawData] = useState<Record<string, any>[]>([]);
   const [fileName, setFileName] = useState<string>('');
-  const [statistics, setStatistics] = useState<any[]>([]);
+  const [statistics, setStatistics] = useState<any[]>([]); // Initialize as empty array
   const [visualizationData, setVisualizationData] = useState<{
     points: Array<{x: number, y: number, z: number, value: number}>,
     axisLabels: string[]
@@ -24,7 +24,7 @@ export const useDataProcessing = () => {
       try {
         // Compute statistics
         const stats = calculateStatistics(rawData);
-        setStatistics(stats);
+        setStatistics(stats); // Now this is safe because stats is an array
         
         // Prepare data for 3D visualization
         const visData = prepare3DData(rawData);
