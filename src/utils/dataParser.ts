@@ -22,12 +22,19 @@ export const extractNumericalData = (data: Record<string, any>[]) => {
 /**
  * Calculate basic statistics for data
  */
-export const calculateStatistics = (data: Record<string, any>[]) => {
-  if (!data.length) return []; // Ensure we return an empty array, not an empty object
+export const calculateStatistics = (data: Record<string, any>[]): Array<{
+  column: string;
+  min: number;
+  max: number;
+  avg: number;
+  stdDev: number;
+  sum: number;
+}> => {
+  if (!data.length) return []; 
   
   const { columns, values } = extractNumericalData(data);
   
-  if (columns.length === 0) return []; // Return empty array for consistency
+  if (columns.length === 0) return []; 
   
   const stats = columns.map((column, index) => {
     const columnValues = values[index];

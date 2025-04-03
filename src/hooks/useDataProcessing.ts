@@ -21,7 +21,7 @@ interface VisualizationData {
 export const useDataProcessing = () => {
   const [rawData, setRawData] = useState<Record<string, any>[]>([]);
   const [fileName, setFileName] = useState<string>('');
-  const [statistics, setStatistics] = useState<Statistic[]>([]); // Properly typed as array
+  const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [visualizationData, setVisualizationData] = useState<VisualizationData>({ 
     points: [], 
     axisLabels: [] 
@@ -39,12 +39,12 @@ export const useDataProcessing = () => {
       try {
         // Compute statistics
         const stats = calculateStatistics(rawData);
+        // Ensure stats is always an array before setting it
         if (Array.isArray(stats)) {
           setStatistics(stats);
         } else {
-          // Fallback if stats is not an array for any reason
           console.error('Statistics is not an array:', stats);
-          setStatistics([]); // Set to empty array as fallback
+          setStatistics([]);
         }
         
         // Prepare data for 3D visualization
