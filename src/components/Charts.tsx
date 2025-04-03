@@ -80,7 +80,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   return (
     <div className={cn("w-full h-[400px] rounded-xl overflow-hidden glass p-4", className)}>
       <ResponsiveContainer width="100%" height="100%">
-        {type === 'line' && (
+        {type === 'line' ? (
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#444" />
             <XAxis dataKey="name" stroke="#aaa" />
@@ -106,9 +106,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               />
             ))}
           </LineChart>
-        )}
-        
-        {type === 'bar' && (
+        ) : type === 'bar' ? (
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#444" />
             <XAxis dataKey="name" stroke="#aaa" />
@@ -131,9 +129,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               />
             ))}
           </BarChart>
-        )}
-        
-        {type === 'pie' && (
+        ) : (
           <PieChart>
             <Pie
               data={chartData}
