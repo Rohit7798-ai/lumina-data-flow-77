@@ -63,12 +63,25 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom neon colors
+				// Enhanced color palette with more vibrant neon colors
 				neon: {
 					cyan: '#00FFFF',
 					pink: '#FF10F0',
 					blue: '#1EAEDB',
-					purple: '#8B5CF6'
+					purple: '#8B5CF6',
+					green: '#80FFDB',
+					orange: '#FF9F1C',
+					yellow: '#FFD166'
+				},
+				chart: {
+					purple: '#8B5CF6',
+					cyan: '#00FFFF',
+					pink: '#FF10F0',
+					blue: '#1EAEDB',
+					teal: '#64DFDF',
+					orange: '#FF9F1C',
+					'deep-purple': '#7400B8',
+					mint: '#80FFDB',
 				}
 			},
 			borderRadius: {
@@ -86,8 +99,8 @@ export default {
 					to: { height: '0' }
 				},
 				'pulse-glow': {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.7' }
+					'0%, 100%': { opacity: '1', filter: 'drop-shadow(0 0 5px currentColor)' },
+					'50%': { opacity: '0.7', filter: 'drop-shadow(0 0 2px currentColor)' }
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },

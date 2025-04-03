@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { calculateStatistics, prepare3DData } from '@/utils/dataParser';
 import { toast } from 'sonner';
 
@@ -18,6 +18,12 @@ interface VisualizationData {
   axisLabels: string[];
 }
 
+interface FilterOptions {
+  column: string;
+  operator: 'equals' | 'notEquals' | 'greaterThan' | 'lessThan' | 'contains';
+  value: string | number;
+}
+
 export const useDataProcessing = () => {
   const [rawData, setRawData] = useState<Record<string, any>[]>([]);
   const [fileName, setFileName] = useState<string>('');
@@ -27,11 +33,78 @@ export const useDataProcessing = () => {
     axisLabels: [] 
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions[]>([]);
+  const [availableColumns, setAvailableColumns] = useState<string[]>([]);
 
   const processData = (data: Record<string, any>[], fileName: string) => {
     setRawData(data);
     setFileName(fileName);
     setIsProcessing(true);
+    
+    // Extract column names for filtering
+    if (data.length > 0) {
+      setAvailableColumns(Object.keys(data[0]));
+    }
+  };
+
+  // Apply filters to the raw data
+  const filteredData = useMemo(() => {
+    if (!rawData.length) return [];
+
+    return rawData.filter(row => {
+      // If no filters, return all data
+      if (!filters.length) return true;
+
+      // Check if the row satisfies all filters (AND logic)
+      return filters.every(filter => {
+        const cellValue = row[filter.column];
+        
+        if (cellValue === undefined || cellValue === null) return false;
+
+        switch (filter.operator) {
+          case 'equals':
+            return cellValue == filter.value; // Using == to allow type coercion
+          case 'notEquals':
+            return cellValue != filter.value;
+          case 'greaterThan':
+            return Number(cellValue) > Number(filter.value);
+          case 'lessThan':
+            return Number(cellValue) < Number(filter.value);
+          case 'contains':
+            return String(cellValue).toLowerCase().includes(String(filter.value).toLowerCase());
+          default:
+            return true;
+        }
+      });
+    });
+  }, [rawData, filters]);
+
+  // Add or update a filter
+  const addFilter = (filter: FilterOptions) => {
+    // If filter for same column exists, replace it
+    setFilters(prev => {
+      const exists = prev.findIndex(f => f.column === filter.column);
+      if (exists >= 0) {
+        const newFilters = [...prev];
+        newFilters[exists] = filter;
+        return newFilters;
+      }
+      return [...prev, filter];
+    });
+    
+    toast.success(`Filter on ${filter.column} applied`);
+  };
+
+  // Remove a filter
+  const removeFilter = (column: string) => {
+    setFilters(prev => prev.filter(f => f.column !== column));
+    toast.info(`Filter on ${column} removed`);
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters([]);
+    toast.info('All filters cleared');
   };
 
   useEffect(() => {
@@ -69,11 +142,17 @@ export const useDataProcessing = () => {
 
   return {
     rawData,
+    filteredData,
     fileName,
     statistics,
     visualizationData,
     isProcessing,
-    processData
+    processData,
+    filters,
+    addFilter,
+    removeFilter,
+    clearFilters,
+    availableColumns
   };
 };
 

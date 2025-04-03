@@ -4,6 +4,8 @@ import FileUpload from '@/components/FileUpload';
 import DataVisualization from '@/components/DataVisualization';
 import DataSummary from '@/components/DataSummary';
 import Charts from '@/components/Charts';
+import Dashboard from '@/components/Dashboard';
+import FilterPanel from '@/components/FilterPanel';
 import useDataProcessing from '@/hooks/useDataProcessing';
 import { BarChart3, PieChart, Database, Github, SunMoon, LineChart } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,14 +15,21 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 const Index = () => {
   const { 
     rawData,
+    filteredData,
     fileName,
     statistics,
     visualizationData,
     isProcessing,
-    processData
+    processData,
+    filters,
+    addFilter,
+    removeFilter,
+    clearFilters,
+    availableColumns
   } = useDataProcessing();
   
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
+  const [showFilters, setShowFilters] = useState(false);
   
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -79,42 +88,76 @@ const Index = () => {
               <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <h2 className="text-2xl font-bold text-gradient">Data Visualization</h2>
                 
-                {/* Chart Type Selector */}
-                <div className="glass px-4 py-3 rounded-lg">
-                  <RadioGroup 
-                    value={chartType} 
-                    onValueChange={(value) => setChartType(value as 'line' | 'bar' | 'pie')}
-                    className="flex items-center gap-4"
+                {/* Chart Controls */}
+                <div className="flex flex-wrap gap-4">
+                  {/* Filter Toggle Button */}
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={cn(
+                      "glass px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors",
+                      showFilters ? "bg-white/20" : "hover:bg-white/10"
+                    )}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem id="line" value="line" />
-                      <label htmlFor="line" className="text-sm cursor-pointer flex items-center gap-1">
-                        <LineChart className="h-4 w-4" />
-                        <span>Line</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem id="bar" value="bar" />
-                      <label htmlFor="bar" className="text-sm cursor-pointer flex items-center gap-1">
-                        <BarChart3 className="h-4 w-4" />
-                        <span>Bar</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem id="pie" value="pie" />
-                      <label htmlFor="pie" className="text-sm cursor-pointer flex items-center gap-1">
-                        <PieChart className="h-4 w-4" />
-                        <span>Pie</span>
-                      </label>
-                    </div>
-                  </RadioGroup>
+                    {showFilters ? "Hide Filters" : "Show Filters"} 
+                    <span className="glass px-2 py-0.5 rounded-full text-xs">{filters.length}</span>
+                  </button>
+                  
+                  {/* Chart Type Selector */}
+                  <div className="glass px-4 py-2 rounded-lg">
+                    <RadioGroup 
+                      value={chartType} 
+                      onValueChange={(value) => setChartType(value as 'line' | 'bar' | 'pie')}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem id="line" value="line" />
+                        <label htmlFor="line" className="text-sm cursor-pointer flex items-center gap-1">
+                          <LineChart className="h-4 w-4" />
+                          <span>Line</span>
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem id="bar" value="bar" />
+                        <label htmlFor="bar" className="text-sm cursor-pointer flex items-center gap-1">
+                          <BarChart3 className="h-4 w-4" />
+                          <span>Bar</span>
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem id="pie" value="pie" />
+                        <label htmlFor="pie" className="text-sm cursor-pointer flex items-center gap-1">
+                          <PieChart className="h-4 w-4" />
+                          <span>Pie</span>
+                        </label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Filters Panel */}
+              {showFilters && (
+                <FilterPanel
+                  columns={availableColumns}
+                  onAddFilter={addFilter}
+                  onRemoveFilter={removeFilter}
+                  onClearFilters={clearFilters}
+                  activeFilters={filters}
+                  className="mb-4"
+                />
+              )}
+              
+              {/* Data Dashboard */}
+              <Dashboard
+                data={filteredData}
+                statistics={statistics}
+                isLoading={isProcessing}
+              />
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
                 <div className="lg:col-span-2 relative">
                   <Charts 
-                    data={rawData}
+                    data={filteredData}
                     type={chartType}
                     isLoading={isProcessing}
                     className="h-[500px]"
@@ -124,7 +167,7 @@ const Index = () => {
                 <div className="space-y-6">
                   <DataSummary 
                     fileName={fileName}
-                    rowCount={rawData.length}
+                    rowCount={filteredData.length}
                     statistics={statistics}
                     isLoading={isProcessing}
                   />
