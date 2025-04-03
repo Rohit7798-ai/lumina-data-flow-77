@@ -1,7 +1,6 @@
-
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { cn } from '@/lib/utils';
 
 type DataVisualizationType = 'scatter' | 'bar' | 'surface';
@@ -29,7 +28,6 @@ const DataVisualization = ({
   const controlsRef = useRef<OrbitControls | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Clean up Three.js resources
   const cleanUp = () => {
     if (animationFrameRef.current !== null) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -48,28 +46,22 @@ const DataVisualization = ({
     }
   };
 
-  // Initialize Three.js scene
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Clean up previous scene if it exists
     cleanUp();
     
-    // Get container dimensions
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = container.clientHeight;
     
-    // Create scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     
-    // Create camera
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     camera.position.z = 5;
     cameraRef.current = camera;
     
-    // Create renderer
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
       alpha: true 
@@ -79,38 +71,31 @@ const DataVisualization = ({
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
     
-    // Add orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
     
-    // Add soft ambient light
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     
-    // Add directional light
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(1, 1, 1);
     scene.add(directionalLight);
     
-    // Add a light on the opposite side
     const oppositeLight = new THREE.DirectionalLight(0x8B5CF6, 0.3);
     oppositeLight.position.set(-1, -1, -1);
     scene.add(oppositeLight);
     
-    // Add a soft point light that will move
     const pointLight = new THREE.PointLight(0x00FFFF, 1, 10);
     pointLight.position.set(2, 2, 2);
     scene.add(pointLight);
     
-    // Grid helper (subtle)
     const gridHelper = new THREE.GridHelper(4, 10, 0x1A1F2C, 0x1A1F2C);
     gridHelper.material.opacity = 0.1;
     gridHelper.material.transparent = true;
     scene.add(gridHelper);
     
-    // Add axes labels
     const createAxisLabel = (text: string, position: THREE.Vector3, color: string) => {
       const canvas = document.createElement('canvas');
       canvas.width = 256;
@@ -134,17 +119,14 @@ const DataVisualization = ({
       scene.add(sprite);
     };
     
-    // Add subtle axes
     const axesHelper = new THREE.AxesHelper(2.5);
     (axesHelper.material as THREE.Material).opacity = 0.3;
     (axesHelper.material as THREE.Material).transparent = true;
     scene.add(axesHelper);
     
-    // Animation loop
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
       
-      // Animate point light
       const time = Date.now() * 0.001;
       pointLight.position.x = Math.sin(time) * 3;
       pointLight.position.z = Math.cos(time) * 3;
@@ -155,7 +137,6 @@ const DataVisualization = ({
     
     animate();
     
-    // Handle resize
     const handleResize = () => {
       if (!container || !camera || !renderer) return;
       
@@ -169,7 +150,6 @@ const DataVisualization = ({
     
     window.addEventListener('resize', handleResize);
     
-    // Clean up
     return () => {
       cleanUp();
       window.removeEventListener('resize', handleResize);
@@ -179,13 +159,11 @@ const DataVisualization = ({
     };
   }, []);
 
-  // Update visualization when data changes
   useEffect(() => {
     if (!sceneRef.current || isLoading || data.points.length === 0) return;
     
     const scene = sceneRef.current;
     
-    // Remove any existing data points
     scene.children = scene.children.filter(child => 
       child instanceof THREE.AmbientLight || 
       child instanceof THREE.DirectionalLight || 
@@ -194,7 +172,6 @@ const DataVisualization = ({
       child instanceof THREE.AxesHelper
     );
     
-    // Add axis labels
     if (data.axisLabels.length >= 3) {
       const createAxisLabel = (text: string, position: THREE.Vector3) => {
         const canvas = document.createElement('canvas');
@@ -224,7 +201,6 @@ const DataVisualization = ({
       createAxisLabel(data.axisLabels[2], new THREE.Vector3(0, 0, 2.7));
     }
     
-    // Find min/max values for normalization
     let minValue = Infinity;
     let maxValue = -Infinity;
     
@@ -235,21 +211,17 @@ const DataVisualization = ({
     
     const valueRange = maxValue - minValue;
     
-    // Create a color function based on point value
     const getColor = (value: number) => {
       const normalizedValue = valueRange ? (value - minValue) / valueRange : 0.5;
       
-      // Generate a color based on value (blue -> purple -> pink)
-      const h = 270 - normalizedValue * 60; // 270 (blue/purple) to 210 (pink)
-      const s = 80 + normalizedValue * 20; // 80% to 100%
-      const l = 50 + normalizedValue * 10; // 50% to 60%
+      const h = 270 - normalizedValue * 60;
+      const s = 80 + normalizedValue * 20;
+      const l = 50 + normalizedValue * 10;
       
       return `hsl(${h}, ${s}%, ${l}%)`;
     };
     
-    // Create different visualizations based on type
     if (type === 'scatter') {
-      // Create point cloud for scatter plot
       const geometry = new THREE.BufferGeometry();
       const positions: number[] = [];
       const colors: number[] = [];
@@ -257,7 +229,6 @@ const DataVisualization = ({
       data.points.forEach(point => {
         positions.push(point.x * 2, point.y * 2, point.z * 2);
         
-        // Convert hex color to RGB values
         const color = new THREE.Color(getColor(point.value));
         colors.push(color.r, color.g, color.b);
       });
@@ -277,12 +248,10 @@ const DataVisualization = ({
       scene.add(pointCloud);
       
     } else if (type === 'bar') {
-      // Create 3D bars
       data.points.forEach((point, index) => {
         const height = Math.abs(point.y) * 2;
         const geometry = new THREE.BoxGeometry(0.1, height, 0.1);
         
-        // Position the bar at the bottom
         geometry.translate(0, height / 2, 0);
         
         const color = getColor(point.value);
