@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, ArrowDown, ArrowUp, Calendar } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FilterOptions {
   column: string;
@@ -34,6 +35,9 @@ const FilterPanel = ({
   const [selectedColumn, setSelectedColumn] = useState<string>('');
   const [selectedOperator, setSelectedOperator] = useState<FilterOptions['operator']>('equals');
   const [filterValue, setFilterValue] = useState<string>('');
+  
+  // Track expanded state for filter sections
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
   const handleAddFilter = () => {
     if (!selectedColumn || !filterValue.trim()) return;
@@ -58,21 +62,56 @@ const FilterPanel = ({
     }
   };
 
+  const getOperatorIcon = (operator: FilterOptions['operator']) => {
+    switch (operator) {
+      case 'greaterThan': return <ArrowUp className="h-3 w-3" />;
+      case 'lessThan': return <ArrowDown className="h-3 w-3" />;
+      default: return null;
+    }
+  };
+
   return (
     <div className={cn("glass p-4 rounded-xl", className)}>
       <div className="flex items-center gap-2 mb-4">
         <Filter className="h-5 w-5 text-neon-purple" />
         <h3 className="text-lg font-medium">Data Filters</h3>
         
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+                className="ml-auto text-xs h-8"
+              >
+                {isAdvancedOpen ? "Simple View" : "Advanced Options"}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isAdvancedOpen ? "Show basic filter options" : "Show more filter options"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
         {activeFilters.length > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onClearFilters}
-            className="ml-auto text-xs h-8"
-          >
-            Clear All
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onClearFilters}
+                  className="text-xs h-8"
+                >
+                  Clear All
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Remove all active filters</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
       
@@ -84,7 +123,10 @@ const FilterPanel = ({
             className="bg-secondary/50 flex items-center gap-1 py-1.5"
           >
             <span className="font-medium">{filter.column}</span>
-            <span className="text-muted-foreground">{getOperatorLabel(filter.operator)}</span>
+            <span className="text-muted-foreground flex items-center gap-0.5">
+              {getOperatorIcon(filter.operator)}
+              {getOperatorLabel(filter.operator)}
+            </span>
             <span>{String(filter.value)}</span>
             <Button
               variant="ghost"
@@ -105,7 +147,10 @@ const FilterPanel = ({
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
         <div>
-          <Label htmlFor="filterColumn">Column</Label>
+          <Label htmlFor="filterColumn" className="flex items-center gap-1">
+            Column
+            <span className="text-neon-purple">*</span>
+          </Label>
           <Select 
             value={selectedColumn} 
             onValueChange={setSelectedColumn}
@@ -124,7 +169,10 @@ const FilterPanel = ({
         </div>
         
         <div>
-          <Label htmlFor="filterOperator">Operator</Label>
+          <Label htmlFor="filterOperator" className="flex items-center gap-1">
+            Condition
+            <span className="text-neon-purple">*</span>
+          </Label>
           <Select 
             value={selectedOperator} 
             onValueChange={(value) => setSelectedOperator(value as FilterOptions['operator'])}
@@ -143,7 +191,10 @@ const FilterPanel = ({
         </div>
         
         <div>
-          <Label htmlFor="filterValue">Value</Label>
+          <Label htmlFor="filterValue" className="flex items-center gap-1">
+            Value
+            <span className="text-neon-purple">*</span>
+          </Label>
           <Input
             id="filterValue"
             placeholder="Filter value"
@@ -153,15 +204,45 @@ const FilterPanel = ({
         </div>
         
         <div className="flex items-end">
-          <Button 
-            onClick={handleAddFilter} 
-            className="w-full"
-            disabled={!selectedColumn || !filterValue.trim()}
-          >
-            Apply Filter
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleAddFilter} 
+                  className="w-full bg-gradient-to-r from-neon-blue to-neon-purple hover:from-neon-purple hover:to-neon-blue transition-all duration-300"
+                  disabled={!selectedColumn || !filterValue.trim()}
+                >
+                  Apply Filter
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Add this filter to your data view</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
+      
+      {isAdvancedOpen && (
+        <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
+          <h4 className="text-sm font-medium mb-2 text-neon-cyan">Advanced Filter Options</h4>
+          <p className="text-xs text-muted-foreground mb-4">
+            Create complex filters by combining multiple conditions. All filters are applied using AND logic.
+          </p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+            {/* Future implementation: Date range filters */}
+            <div className="col-span-full">
+              <div className="flex items-center justify-center p-4 glass rounded-lg">
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-5 w-5 text-neon-purple" />
+                  <span className="text-sm">Date range filters coming soon</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

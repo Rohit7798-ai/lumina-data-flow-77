@@ -65,21 +65,22 @@ export default {
 				},
 				// Enhanced color palette with more vibrant neon colors
 				neon: {
-					cyan: '#00FFFF',
-					pink: '#FF10F0',
-					blue: '#1EAEDB',
-					purple: '#8B5CF6',
-					green: '#80FFDB',
-					orange: '#FF9F1C',
-					yellow: '#FFD166',
-					red: '#FF5E5B',
-					magenta: '#FF36AB',
-					turquoise: '#06D6A0',
-					violet: '#9D4EDD',
-					indigo: '#7209B7',
-					amber: '#FB8500',
-					emerald: '#2DC653'
+					cyan: '#00FFFF',    // Bright cyan
+					pink: '#FF10F0',    // Vibrant pink
+					blue: '#1EAEDB',    // Azure blue
+					purple: '#8B5CF6',  // Vibrant purple
+					green: '#80FFDB',   // Mint green
+					orange: '#FF9F1C',  // Bright orange
+					yellow: '#FFD166',  // Golden yellow
+					red: '#FF5E5B',     // Coral red
+					magenta: '#FF36AB', // Hot magenta
+					turquoise: '#06D6A0', // Turquoise
+					violet: '#9D4EDD',  // Electric violet
+					indigo: '#7209B7',  // Deep indigo
+					amber: '#FB8500',   // Amber
+					emerald: '#2DC653'  // Emerald green
 				},
+				// Enhanced chart colors for better data visualization
 				chart: {
 					purple: '#8B5CF6',
 					cyan: '#00FFFF',
@@ -138,6 +139,14 @@ export default {
 				'shimmer': {
 					'0%': { backgroundPosition: '-1000px 0' },
 					'100%': { backgroundPosition: '1000px 0' }
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				'zoom-in': {
+					'0%': { transform: 'scale(0.95)' },
+					'100%': { transform: 'scale(1)' }
 				}
 			},
 			animation: {
@@ -148,7 +157,9 @@ export default {
 				'gradient-shift': 'gradient-shift 15s ease infinite',
 				'data-glow': 'data-glow 8s ease-in-out infinite',
 				'chart-fade-in': 'chart-fade-in 0.5s ease-out',
-				'shimmer': 'shimmer 2s infinite linear'
+				'shimmer': 'shimmer 2s infinite linear',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'zoom-in': 'zoom-in 0.3s ease-out'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

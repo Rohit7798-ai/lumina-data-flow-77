@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, BarChart, PieChart, Line, Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { LineChart, BarChart, PieChart, Line, Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
 import { cn } from '@/lib/utils';
 
 type ChartsProps = {
@@ -33,9 +33,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   const [isAnimating, setIsAnimating] = useState(true);
   const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
   
-  // Animation effect
   useEffect(() => {
-    const animationDuration = 1500; // animation duration in ms
+    if (!data.length) return;
+    
+    const animationDuration = 1200;
     const startTime = Date.now();
     
     const animationFrame = () => {
@@ -58,36 +59,34 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     };
   }, [data, type]);
   
-  // Extract numerical data for charts
   const chartData = React.useMemo(() => {
     if (!data.length) return [];
     
-    // For pie chart, we need to transform the data
     if (type === 'pie') {
       const firstRow = data[0];
       const keys = Object.keys(firstRow).filter(key => 
         typeof firstRow[key] === 'number' || !isNaN(Number(firstRow[key]))
-      ).slice(0, 8); // Limit to 8 keys for pie chart
+      ).slice(0, 6);
       
       return keys.map(key => ({
-        name: key,
-        value: data.reduce((sum, row) => sum + (Number(row[key]) || 0), 0)
+        name: key.length > 10 ? `${key.substring(0, 10)}...` : key,
+        value: data.reduce((sum, row) => sum + (Number(row[key]) || 0), 0),
+        fullName: key
       }));
     }
     
-    // For line and bar charts, keep the original structure but limit to 20 rows
-    return data.slice(0, 20).map((row, index) => {
+    return data.slice(0, 15).map((row, index) => {
       const result: Record<string, any> = { name: `Item ${index + 1}`, id: index };
       
-      // Try to find a suitable name property
       const nameField = Object.keys(row).find(key => 
         typeof row[key] === 'string' && 
         !['id', 'uuid', 'guid'].includes(key.toLowerCase())
       ) || Object.keys(row)[0];
       
-      result.name = String(row[nameField]).slice(0, 10);
+      const displayName = String(row[nameField]);
+      result.name = displayName.length > 8 ? `${displayName.slice(0, 8)}...` : displayName;
+      result.fullName = displayName;
       
-      // Add numerical values
       Object.entries(row).forEach(([key, value]) => {
         if ((typeof value === 'number' || !isNaN(Number(value))) && key !== nameField) {
           result[key] = Number(value);
@@ -98,14 +97,16 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     });
   }, [data, type]);
   
-  // Get fields to display
   const fields = React.useMemo(() => {
     if (!chartData.length) return [];
     const firstRow = chartData[0];
-    return Object.keys(firstRow).filter(key => key !== 'name' && key !== 'id').slice(0, 5);
+    return Object.keys(firstRow).filter(key => 
+      key !== 'name' && 
+      key !== 'id' && 
+      key !== 'fullName'
+    ).slice(0, 5);
   }, [chartData]);
   
-  // Render loading state
   if (isLoading) {
     return (
       <div className={cn(
@@ -114,29 +115,28 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       )}>
         <div className="flex flex-col items-center gap-2">
           <div className="w-12 h-12 rounded-full border-4 border-transparent border-t-neon-cyan border-r-neon-pink animate-spin"></div>
-          <div className="text-white/50">Loading chart...</div>
+          <div className="text-white/80">Loading visualization...</div>
         </div>
       </div>
     );
   }
 
-  // Render empty state
   if (!chartData.length) {
     return (
       <div className={cn(
         "w-full h-[400px] rounded-xl overflow-hidden glass flex items-center justify-center",
         className
       )}>
-        <div className="text-white/50">Upload data to visualize</div>
+        <div className="text-white/80">Upload data to visualize</div>
       </div>
     );
   }
 
-  // Calculate animation values for 3D effects
   const animatedData = chartData.map((item) => {
     const result: Record<string, any> = { 
       name: item.name, 
-      id: item.id 
+      id: item.id,
+      fullName: item.fullName
     };
     
     fields.forEach(field => {
@@ -146,29 +146,37 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     return result;
   });
 
-  // Custom Legend formatter to prevent text overlapping
   const customLegendFormatter = (value: string) => {
-    const maxLength = 12;
+    const maxLength = 10;
     const displayValue = value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
-    return <span title={value} className="text-xs">{displayValue}</span>;
+    return <span title={value} className="text-xs font-medium">{displayValue}</span>;
   };
 
-  // Enhanced tooltip that gives more context
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const fullName = payload[0]?.payload?.fullName || label;
+      
       return (
-        <div className="bg-black/80 p-3 rounded-md backdrop-blur-lg border border-white/10 shadow-xl">
-          <p className="text-white text-sm font-medium mb-1">{label}</p>
-          <div className="space-y-1">
+        <div className="bg-black/90 p-3 rounded-md backdrop-blur-lg border border-white/20 shadow-xl">
+          <p className="text-white text-sm font-medium mb-2">{fullName}</p>
+          <div className="space-y-1.5">
             {payload.map((entry: any, index: number) => (
               <div key={`tooltip-item-${index}`} className="flex items-center gap-2">
                 <div 
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: entry.color }}
                 />
-                <p className="text-xs text-white/80">
-                  <span className="text-white font-medium">{entry.name}: </span> 
-                  {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+                <p className="text-xs">
+                  <span className="text-white/80 font-medium mr-1">
+                    {entry.name}:
+                  </span> 
+                  <span className="text-white font-mono">
+                    {typeof entry.value === 'number' 
+                      ? entry.value.toLocaleString(undefined, {
+                          maximumFractionDigits: 2
+                        }) 
+                      : entry.value}
+                  </span>
                 </p>
               </div>
             ))}
@@ -179,7 +187,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     return null;
   };
 
-  // Dynamic dot rendering for line charts
   const renderDot = (props: any) => {
     const { cx, cy, index } = props;
     const isHovered = hoveredDataPoint === index;
@@ -217,6 +224,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               transform: isAnimating ? `perspective(1200px) rotateX(${5 * (1 - animationProgress)}deg)` : 'none',
               transition: 'transform 0.5s ease'
             }}
+            margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
             onMouseMove={(e) => {
               if (e && e.activeTooltipIndex !== undefined) {
                 setHoveredDataPoint(e.activeTooltipIndex);
@@ -240,13 +248,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             <XAxis 
               dataKey="name" 
               stroke="#aaa" 
-              tick={{ fontSize: 11, fill: '#ccc' }}
+              tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
             />
             <YAxis 
               stroke="#aaa" 
-              tick={{ fontSize: 11, fill: '#ccc' }}
+              tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
             />
@@ -272,6 +280,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 key={field}
                 type="monotone" 
                 dataKey={field} 
+                name={field}
                 stroke={`url(#lineGradient${index})`}
                 strokeWidth={2}
                 dot={renderDot}
@@ -294,6 +303,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               transform: isAnimating ? `perspective(1200px) rotateX(${10 * (1 - animationProgress)}deg)` : 'none',
               transition: 'transform 0.5s ease' 
             }}
+            margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
           >
             <defs>
               {fields.map((field, index) => (
@@ -311,13 +321,17 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             <XAxis 
               dataKey="name" 
               stroke="#aaa" 
-              tick={{ fontSize: 11, fill: '#ccc' }}
+              tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
             />
             <YAxis 
               stroke="#aaa" 
-              tick={{ fontSize: 11, fill: '#ccc' }}
+              tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
             />
@@ -342,6 +356,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               <Bar 
                 key={field}
                 dataKey={field} 
+                name={field}
                 fill={`url(#barGradient${index})`}
                 radius={[4, 4, 0, 0]}
                 animationDuration={1500}
@@ -400,8 +415,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               cy="50%"
               outerRadius={120 * animationProgress}
               innerRadius={60 * animationProgress}
-              labelLine={true}
-              label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`}
+              labelLine={false}
+              label={({ name, percent }) => 
+                percent > 0.05 ? `${name} (${(percent * 100).toFixed(0)}%)` : ''
+              }
               animationDuration={1500}
               animationEasing="ease-out"
               isAnimationActive={isAnimating}
@@ -429,16 +446,20 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             </Pie>
             <Tooltip 
               content={<CustomTooltip />}
-              formatter={(value: any, name: any) => [
-                typeof value === 'number' ? value.toLocaleString() : value, 
-                name
-              ]}
+              formatter={(value: any, name: any, entry: any) => {
+                const fullName = entry.payload.fullName || name;
+                return [
+                  typeof value === 'number' ? value.toLocaleString() : value, 
+                  fullName
+                ];
+              }}
             />
             <Legend 
               formatter={customLegendFormatter}
               layout="horizontal"
               verticalAlign="bottom"
               wrapperStyle={{
+                paddingTop: 20,
                 overflowX: 'auto',
                 overflowY: 'hidden',
                 whiteSpace: 'nowrap',
@@ -451,7 +472,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       </ResponsiveContainer>
       
       {isAnimating && (
-        <div className="absolute top-2 right-2 glass px-2 py-1 rounded-md text-xs text-white/70 animate-pulse">
+        <div className="absolute top-2 right-2 glass px-2 py-1 rounded-md text-xs text-white/80 animate-pulse">
           <span>Rendering visualization...</span>
         </div>
       )}
