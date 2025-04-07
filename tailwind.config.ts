@@ -147,6 +147,18 @@ export default {
 				'zoom-in': {
 					'0%': { transform: 'scale(0.95)' },
 					'100%': { transform: 'scale(1)' }
+				},
+				'bounce': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-25%)' }
+				},
+				'ripple': {
+					'0%': { transform: 'scale(0)', opacity: '1' },
+					'100%': { transform: 'scale(4)', opacity: '0' }
+				},
+				'text-shimmer': {
+					'0%': { backgroundPosition: '-200% 0' },
+					'100%': { backgroundPosition: '200% 0' }
 				}
 			},
 			animation: {
@@ -159,13 +171,61 @@ export default {
 				'chart-fade-in': 'chart-fade-in 0.5s ease-out',
 				'shimmer': 'shimmer 2s infinite linear',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'zoom-in': 'zoom-in 0.3s ease-out'
+				'zoom-in': 'zoom-in 0.3s ease-out',
+				'bounce': 'bounce 1s infinite',
+				'ripple': 'ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite',
+				'text-shimmer': 'text-shimmer 3s ease-in-out infinite'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'grid-pattern': 'linear-gradient(to right, #1A1F2C 1px, transparent 1px), linear-gradient(to bottom, #1A1F2C 1px, transparent 1px)',
 				'data-shimmer': 'linear-gradient(to right, rgba(255,255,255,0) 0, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.2) 40%, rgba(255,255,255,0) 100%)',
-				'neon-glow': 'linear-gradient(120deg, #8B5CF6, #00FFFF, #FF10F0)'
+				'neon-glow': 'linear-gradient(120deg, #8B5CF6, #00FFFF, #FF10F0)',
+				'text-shimmer': 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)'
+			},
+			boxShadow: {
+				'neon': '0 0 5px rgba(139, 92, 246, 0.5), 0 0 20px rgba(0, 255, 255, 0.3)',
+				'neon-hover': '0 0 10px rgba(139, 92, 246, 0.8), 0 0 30px rgba(0, 255, 255, 0.5), 0 0 50px rgba(255, 16, 240, 0.3)',
+				'button': '0 4px 14px 0 rgba(139, 92, 246, 0.2)',
+				'card-hover': '0 10px 30px -5px rgba(0, 0, 0, 0.3)',
+				'input-focus': '0 0 0 2px rgba(139, 92, 246, 0.4)'
+			},
+			typography: {
+				DEFAULT: {
+					css: {
+						maxWidth: '65ch',
+						color: 'inherit',
+						a: {
+							color: 'inherit',
+							opacity: 0.8,
+							'&:hover': {
+								opacity: 1,
+							},
+							textDecoration: 'underline',
+							textDecorationColor: 'rgba(139, 92, 246, 0.4)',
+							textUnderlineOffset: '3px',
+						},
+						h1: {
+							letterSpacing: '-0.025em',
+						},
+						h2: {
+							letterSpacing: '-0.025em',
+						},
+						h3: {
+							letterSpacing: '-0.025em',
+						},
+						blockquote: {
+							borderLeftColor: 'rgba(139, 92, 246, 0.4)',
+							opacity: 0.8,
+						},
+						'thead th': {
+							color: 'inherit',
+						},
+						'tbody tr, tbody td': {
+							borderBottomColor: 'rgb(51, 65, 85)'
+						},
+					}
+				}
 			}
 		}
 	},

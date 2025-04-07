@@ -34,8 +34,25 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
-    background-image: radial-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-image: 
+      radial-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+      linear-gradient(to right, rgba(30, 174, 219, 0.01), rgba(255, 16, 240, 0.01));
+    background-size: 40px 40px, 100% 100%;
+    background-position: 0 0, 0 0;
+  }
+
+  /* Subtle floating particles effect */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.3;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='1' fill='%238B5CF6' fill-opacity='0.3'/%3E%3Ccircle cx='30' cy='40' r='0.8' fill='%231EAEDB' fill-opacity='0.4'/%3E%3Ccircle cx='70' cy='30' r='1.2' fill='%23FF10F0' fill-opacity='0.2'/%3E%3Ccircle cx='90' cy='80' r='0.6' fill='%238B5CF6' fill-opacity='0.3'/%3E%3Ccircle cx='50' cy='50' r='0.5' fill='%231EAEDB' fill-opacity='0.2'/%3E%3Ccircle cx='20' cy='90' r='1' fill='%23FF10F0' fill-opacity='0.4'/%3E%3C/svg%3E");
+    animation: floating-particles 150s linear infinite;
   }
 
   html {
@@ -53,6 +70,7 @@
   
   .text-gradient {
     @apply bg-gradient-to-br from-white via-white/90 to-white/70 bg-clip-text text-transparent;
+    animation: shift-gradient 8s ease infinite;
   }
   
   .text-glow {
@@ -73,6 +91,12 @@
     animation: gradient-shift 15s ease infinite;
     background-size: 200% 200%;
   }
+  
+  /* Heading styles */
+  h1, h2, h3, h4, h5 {
+    @apply tracking-tight;
+    line-height: 1.2;
+  }
 }
 
 /* Custom scrollbar */
@@ -87,4 +111,102 @@
 
 ::-webkit-scrollbar-thumb {
   @apply bg-primary/80 rounded-full hover:bg-primary;
+}
+
+/* Animation Keyframes */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shift-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes floating-particles {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* Add new animations to tailwind config */
+@layer utilities {
+  .animate-shake {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-300;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-5px);
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-300;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
