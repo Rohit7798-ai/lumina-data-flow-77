@@ -7,13 +7,17 @@ import Charts from '@/components/Charts';
 import Dashboard from '@/components/Dashboard';
 import FilterPanel from '@/components/FilterPanel';
 import useDataProcessing from '@/hooks/useDataProcessing';
-import { BarChart3, PieChart, Database, Github, SunMoon, LineChart, Info, Filter as FilterIcon } from 'lucide-react';
+import { 
+  BarChart3, PieChart, Database, Github, SunMoon, 
+  LineChart, Info, Filter as FilterIcon, 
+  AreaChart, Scatter, Radar, Layout, Download, Share2, Settings
+} from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, EnhancedTooltipContent } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 const Index = () => {
@@ -32,17 +36,18 @@ const Index = () => {
     availableColumns
   } = useDataProcessing();
   
-  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie' | 'area' | 'scatter' | 'radar' | 'composed'>('line');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("charts");
   
   const handleChartTypeChange = (value: string) => {
-    setChartType(value as 'line' | 'bar' | 'pie');
+    setChartType(value as 'line' | 'bar' | 'pie' | 'area' | 'scatter' | 'radar' | 'composed');
     toast(`Chart type changed to ${value}`);
   };
   
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Header */}
+      {/* Header with Power BI style top nav */}
       <header className="glass border-b border-white/10 py-4 px-6 z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -52,6 +57,68 @@ const Index = () => {
                 LuminaViz
               </span>
             </h1>
+            
+            {/* Power BI style toolbar */}
+            {rawData.length > 0 && (
+              <div className="hidden md:flex items-center gap-2 ml-8">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="rounded-md">
+                        <Download className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Export</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <EnhancedTooltipContent 
+                      title="Export Options"
+                      metrics={[
+                        { label: "PDF Report", value: "Download" },
+                        { label: "Data as CSV", value: "Download" },
+                        { label: "Images", value: "PNG, JPG" }
+                      ]}
+                    />
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="rounded-md">
+                        <Share2 className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Share</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <EnhancedTooltipContent 
+                      title="Share Visualization"
+                      metrics={[
+                        { label: "Copy Link", value: "URL" },
+                        { label: "Embed", value: "Code" },
+                        { label: "Social Media", value: "Share" }
+                      ]}
+                    />
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="rounded-md">
+                        <Settings className="h-4 w-4 mr-1" />
+                        <span className="text-xs">Settings</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <EnhancedTooltipContent 
+                      title="Chart Settings"
+                      metrics={[
+                        { label: "Appearance", value: "Customize" },
+                        { label: "Data Sources", value: "Manage" },
+                        { label: "Refresh Rate", value: "Set" }
+                      ]}
+                    />
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
           </div>
           
           <TooltipProvider>
@@ -101,6 +168,33 @@ const Index = () => {
               <p className="text-xl text-muted-foreground max-w-xl mx-auto mb-8">
                 Upload your data and explore powerful visualizations with detailed insights
               </p>
+              
+              {/* Feature Highlights - Tableau/Power BI style */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-12">
+                <div className="glass p-6 rounded-xl border border-white/10 hover:border-neon-cyan/30 transition-colors group">
+                  <div className="w-12 h-12 rounded-full glass flex items-center justify-center mx-auto mb-4 group-hover:bg-neon-cyan/10">
+                    <BarChart3 className="h-6 w-6 text-neon-cyan" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Interactive Charts</h3>
+                  <p className="text-sm text-white/70">Visualize your data with beautiful, interactive charts</p>
+                </div>
+                
+                <div className="glass p-6 rounded-xl border border-white/10 hover:border-neon-pink/30 transition-colors group">
+                  <div className="w-12 h-12 rounded-full glass flex items-center justify-center mx-auto mb-4 group-hover:bg-neon-pink/10">
+                    <FilterIcon className="h-6 w-6 text-neon-pink" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Advanced Filtering</h3>
+                  <p className="text-sm text-white/70">Filter and drill down into your data with precision</p>
+                </div>
+                
+                <div className="glass p-6 rounded-xl border border-white/10 hover:border-neon-blue/30 transition-colors group">
+                  <div className="w-12 h-12 rounded-full glass flex items-center justify-center mx-auto mb-4 group-hover:bg-neon-blue/10">
+                    <LineChart className="h-6 w-6 text-neon-blue" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Real-time Insights</h3>
+                  <p className="text-sm text-white/70">Gain actionable insights from your data in real-time</p>
+                </div>
+              </div>
             </div>
           )}
           
@@ -174,7 +268,7 @@ const Index = () => {
                       <RadioGroup 
                         value={chartType} 
                         onValueChange={handleChartTypeChange}
-                        className="flex items-center gap-4"
+                        className="flex flex-wrap items-center gap-4"
                       >
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -220,6 +314,36 @@ const Index = () => {
                             <p>Best for showing proportions</p>
                           </TooltipContent>
                         </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem id="area" value="area" />
+                              <label htmlFor="area" className="text-sm cursor-pointer flex items-center gap-1">
+                                <AreaChart className="h-4 w-4 text-neon-green" />
+                                <span>Area</span>
+                              </label>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Shows cumulative data and area under curves</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem id="scatter" value="scatter" />
+                              <label htmlFor="scatter" className="text-sm cursor-pointer flex items-center gap-1">
+                                <Scatter className="h-4 w-4 text-neon-yellow" />
+                                <span>Scatter</span>
+                              </label>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Shows relationships between two variables</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </RadioGroup>
                     </div>
                   </TooltipProvider>
@@ -240,60 +364,125 @@ const Index = () => {
                 </div>
               )}
               
-              {/* Data Dashboard */}
-              <Dashboard
-                data={filteredData}
-                statistics={statistics}
-                isLoading={isProcessing}
-              />
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                <div className="lg:col-span-2 relative">
-                  <Charts 
-                    data={filteredData}
-                    type={chartType}
-                    isLoading={isProcessing}
-                    className="h-[500px]"
-                  />
-                </div>
-                
-                <div className="space-y-6">
-                  <DataSummary 
-                    fileName={fileName}
-                    rowCount={filteredData.length}
-                    statistics={statistics}
-                    isLoading={isProcessing}
-                  />
-                </div>
+              {/* Power BI / Tableau style tabs for different view types */}
+              <div className="glass rounded-lg p-1 mb-4">
+                <Tabs defaultValue="charts" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="glass bg-transparent w-full flex justify-start mb-2">
+                    <TabsTrigger 
+                      value="charts" 
+                      className="flex items-center gap-1.5 data-[state=active]:bg-white/10 data-[state=active]:text-neon-cyan"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Charts</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="dashboard" 
+                      className="flex items-center gap-1.5 data-[state=active]:bg-white/10 data-[state=active]:text-neon-pink"
+                    >
+                      <Layout className="h-4 w-4" />
+                      <span>Dashboard</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="3d" 
+                      className="flex items-center gap-1.5 data-[state=active]:bg-white/10 data-[state=active]:text-neon-green"
+                    >
+                      <Radar className="h-4 w-4" />
+                      <span>3D View</span>
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="charts" className="mt-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-2 relative">
+                        <Charts 
+                          data={filteredData}
+                          type={chartType}
+                          isLoading={isProcessing}
+                          className="h-[500px]"
+                        />
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <DataSummary 
+                          fileName={fileName}
+                          rowCount={filteredData.length}
+                          statistics={statistics}
+                          isLoading={isProcessing}
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="dashboard" className="mt-2">
+                    <Dashboard
+                      data={filteredData}
+                      statistics={statistics}
+                      isLoading={isProcessing}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="3d" className="mt-2">
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 mb-4">
+                        <h3 className="text-xl font-bold bg-gradient-to-r from-neon-blue to-neon-cyan bg-clip-text text-transparent">
+                          3D Data Visualization
+                        </h3>
+                        
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <button className="p-1 rounded-full hover:bg-white/10">
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="glass border-white/20 text-white w-80">
+                            <div className="space-y-2">
+                              <h4 className="font-medium text-neon-cyan">Interactive 3D View</h4>
+                              <p className="text-xs text-white/80">Click and drag to rotate the visualization. Zoom with the mouse wheel for a closer look at data points.</p>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </div>
+                      
+                      <DataVisualization 
+                        data={visualizationData}
+                        isLoading={isProcessing}
+                        className="h-[500px] w-full"
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
               
-              <div className="mt-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-neon-blue to-neon-cyan bg-clip-text text-transparent">
-                    3D Data Visualization
+              {/* Additional charts - Power BI style "insights" */}
+              {activeTab === "charts" && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-neon-pink to-neon-purple bg-clip-text text-transparent mb-4">
+                    Additional Insights
                   </h3>
                   
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <button className="p-1 rounded-full hover:bg-white/10">
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </HoverCardTrigger>
-                    <HoverCardContent className="glass border-white/20 text-white w-80">
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-neon-cyan">Interactive 3D View</h4>
-                        <p className="text-xs text-white/80">Click and drag to rotate the visualization. Zoom with the mouse wheel for a closer look at data points.</p>
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="glass p-4 rounded-lg">
+                      <h4 className="text-sm font-medium mb-3 text-white/80">Distribution Analysis</h4>
+                      <Charts 
+                        data={filteredData}
+                        type="bar"
+                        isLoading={isProcessing}
+                        className="h-[300px]"
+                      />
+                    </div>
+                    
+                    <div className="glass p-4 rounded-lg">
+                      <h4 className="text-sm font-medium mb-3 text-white/80">Correlation Analysis</h4>
+                      <Charts 
+                        data={filteredData}
+                        type="scatter"
+                        isLoading={isProcessing}
+                        className="h-[300px]"
+                      />
+                    </div>
+                  </div>
                 </div>
-                
-                <DataVisualization 
-                  data={visualizationData}
-                  isLoading={isProcessing}
-                  className="h-[400px] w-full"
-                />
-              </div>
+              )}
             </section>
           )}
         </div>

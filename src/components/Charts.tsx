@@ -1,10 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, BarChart, PieChart, Line, Bar, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  LineChart, BarChart, PieChart, ScatterChart, AreaChart, ComposedChart,
+  Line, Bar, Pie, Scatter, Area, XAxis, YAxis, CartesianGrid, 
+  Tooltip, Legend, ResponsiveContainer, Cell, ZAxis, Sector,
+  ReferenceLine, ReferenceArea, Brush, RadarChart, Radar, PolarGrid,
+  PolarAngleAxis, PolarRadiusAxis
+} from 'recharts';
 import { cn } from '@/lib/utils';
+import { TooltipProvider, Tooltip as UITooltip, TooltipTrigger, EnhancedTooltipContent } from '@/components/ui/tooltip';
+import { Info, Layers, BarChart as BarChartIcon, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
 
 type ChartsProps = {
   data: Array<Record<string, any>>;
-  type: 'line' | 'bar' | 'pie';
+  type: 'line' | 'bar' | 'pie' | 'scatter' | 'area' | 'radar' | 'composed';
   className?: string;
   isLoading?: boolean;
 };
@@ -32,6 +41,8 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
   const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showBrush, setShowBrush] = useState(false);
   
   useEffect(() => {
     if (!data.length) return;
@@ -59,7 +70,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     };
   }, [data, type]);
   
-  const chartData = React.useMemo(() => {
+  const chartData = useMemo(() => {
     if (!data.length) return [];
     
     if (type === 'pie') {
@@ -73,6 +84,29 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
         value: data.reduce((sum, row) => sum + (Number(row[key]) || 0), 0),
         fullName: key
       }));
+    }
+    
+    if (type === 'radar') {
+      return data.slice(0, 8).map((row, index) => {
+        const result: Record<string, any> = { name: `Item ${index + 1}` };
+        
+        const nameField = Object.keys(row).find(key => 
+          typeof row[key] === 'string' && 
+          !['id', 'uuid', 'guid'].includes(key.toLowerCase())
+        ) || Object.keys(row)[0];
+        
+        const displayName = String(row[nameField]);
+        result.name = displayName.length > 8 ? `${displayName.slice(0, 8)}...` : displayName;
+        result.fullName = displayName;
+        
+        Object.entries(row).forEach(([key, value]) => {
+          if ((typeof value === 'number' || !isNaN(Number(value))) && key !== nameField) {
+            result[key] = Number(value);
+          }
+        });
+        
+        return result;
+      });
     }
     
     return data.slice(0, 15).map((row, index) => {
@@ -97,7 +131,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     });
   }, [data, type]);
   
-  const fields = React.useMemo(() => {
+  const fields = useMemo(() => {
     if (!chartData.length) return [];
     const firstRow = chartData[0];
     return Object.keys(firstRow).filter(key => 
@@ -157,7 +191,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       const fullName = payload[0]?.payload?.fullName || label;
       
       return (
-        <div className="bg-black/90 p-3 rounded-md backdrop-blur-lg border border-white/20 shadow-xl">
+        <div className="bg-black/90 p-3 rounded-md backdrop-blur-lg border border-white/20 shadow-xl min-w-[180px]">
           <p className="text-white text-sm font-medium mb-2">{fullName}</p>
           <div className="space-y-1.5">
             {payload.map((entry: any, index: number) => (
@@ -166,11 +200,11 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: entry.color }}
                 />
-                <p className="text-xs">
-                  <span className="text-white/80 font-medium mr-1">
+                <p className="text-xs flex-1 flex justify-between">
+                  <span className="text-white/80 font-medium">
                     {entry.name}:
                   </span> 
-                  <span className="text-white font-mono">
+                  <span className="text-white font-mono ml-2">
                     {typeof entry.value === 'number' 
                       ? entry.value.toLocaleString(undefined, {
                           maximumFractionDigits: 2
@@ -209,12 +243,84 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     );
   };
 
+  const renderActiveShape = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    const RADIAN = Math.PI / 180;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+    const sx = cx + (outerRadius + 10) * cos;
+    const sy = cy + (outerRadius + 10) * sin;
+    const mx = cx + (outerRadius + 30) * cos;
+    const my = cy + (outerRadius + 30) * sin;
+    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+    const ey = my;
+    const textAnchor = cos >= 0 ? 'start' : 'end';
+
+    return (
+      <g>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+          stroke="#fff"
+          strokeWidth={2}
+        />
+        <Sector
+          cx={cx}
+          cy={cy}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 10}
+          fill={fill}
+        />
+        <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" strokeWidth={2} />
+        <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#fff" fontSize={12}>{`${payload.fullName || payload.name}`}</text>
+        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#fff" fontSize={12} fontWeight="bold">
+          {`${value.toLocaleString()}`}
+        </text>
+        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={36} textAnchor={textAnchor} fill="#fff" fontSize={10}>
+          {`(${(percent * 100).toFixed(2)}%)`}
+        </text>
+      </g>
+    );
+  };
+
+  // Define control buttons at the top for Tableau/Power BI style UI
+  const chartControls = (
+    <div className="flex flex-wrap justify-end gap-2 mb-4">
+      <TooltipProvider>
+        <UITooltip>
+          <TooltipTrigger asChild>
+            <button 
+              className="glass p-1.5 rounded-md hover:bg-white/10 text-white text-sm flex items-center gap-1.5 transition-colors"
+              onClick={() => setShowBrush(!showBrush)}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>{showBrush ? "Hide Time Selector" : "Show Time Selector"}</span>
+            </button>
+          </TooltipTrigger>
+          <EnhancedTooltipContent>
+            <p className="text-xs text-white">Enable time range selection for detailed analysis</p>
+          </EnhancedTooltipContent>
+        </UITooltip>
+      </TooltipProvider>
+    </div>
+  );
+
   return (
     <div className={cn(
       "w-full h-[400px] rounded-xl overflow-hidden glass p-4 relative",
       "transition-all duration-500 ease-out hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]",
       className
     )}>
+      {chartControls}
+      
       <ResponsiveContainer width="100%" height="100%">
         {type === 'line' ? (
           <LineChart 
@@ -224,7 +330,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               transform: isAnimating ? `perspective(1200px) rotateX(${5 * (1 - animationProgress)}deg)` : 'none',
               transition: 'transform 0.5s ease'
             }}
-            margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+            margin={{ top: 10, right: 20, left: 10, bottom: showBrush ? 40 : 10 }}
             onMouseMove={(e) => {
               if (e && e.activeTooltipIndex !== undefined) {
                 setHoveredDataPoint(e.activeTooltipIndex);
@@ -251,12 +357,14 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
+              label={{ value: 'Category', position: 'insideBottomRight', offset: -5, fill: '#aaa' }}
             />
             <YAxis 
               stroke="#aaa" 
               tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
+              label={{ value: 'Value', angle: -90, position: 'insideLeft', fill: '#aaa' }}
             />
             <Tooltip 
               content={<CustomTooltip />}
@@ -275,6 +383,11 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 paddingRight: 10
               }}
             />
+            {/* Add reference lines for Power BI style analysis */}
+            <ReferenceLine y={animatedData.reduce((sum, item) => sum + (item[fields[0]] || 0), 0) / animatedData.length} 
+                      stroke="#fff" strokeDasharray="3 3" 
+                      label={{ value: 'Average', position: 'right', fill: '#fff' }} />
+            
             {fields.map((field, index) => (
               <Line 
                 key={field}
@@ -294,6 +407,17 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 }}
               />
             ))}
+            
+            {showBrush && (
+              <Brush 
+                dataKey="name" 
+                height={30} 
+                stroke="#8884d8" 
+                startIndex={0} 
+                endIndex={Math.min(5, animatedData.length - 1)}
+                y={320}
+              />
+            )}
           </LineChart>
         ) : type === 'bar' ? (
           <BarChart 
@@ -303,7 +427,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               transform: isAnimating ? `perspective(1200px) rotateX(${10 * (1 - animationProgress)}deg)` : 'none',
               transition: 'transform 0.5s ease' 
             }}
-            margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+            margin={{ top: 10, right: 20, left: 10, bottom: showBrush ? 40 : 10 }}
           >
             <defs>
               {fields.map((field, index) => (
@@ -328,12 +452,14 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               angle={-45}
               textAnchor="end"
               height={60}
+              label={{ value: 'Category', position: 'insideBottomRight', offset: 0, fill: '#aaa' }}
             />
             <YAxis 
               stroke="#aaa" 
               tick={{ fontSize: 11, fill: '#fff' }}
               tickLine={{ stroke: '#555' }}
               axisLine={{ stroke: '#555' }}
+              label={{ value: 'Value', angle: -90, position: 'insideLeft', fill: '#aaa' }}
             />
             <Tooltip 
               content={<CustomTooltip />}
@@ -352,6 +478,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 paddingRight: 10
               }}
             />
+            
+            {/* Add a reference area for highlighting threshold - Power BI style */}
+            <ReferenceArea y1={0} y2={100} fill="#fff" fillOpacity={0.05} />
+            
             {fields.map((field, index) => (
               <Bar 
                 key={field}
@@ -371,6 +501,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 onMouseLeave={() => {
                   setHoveredDataPoint(null);
                 }}
+                // Power BI style custom label
+                label={{
+                  position: 'top',
+                  fill: '#fff',
+                  fontSize: 10,
+                  formatter: (value) => value > 300 ? value.toFixed(0) : '',
+                }}
               >
                 {animatedData.map((entry, i) => (
                   <Cell 
@@ -384,7 +521,208 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 ))}
               </Bar>
             ))}
+            
+            {showBrush && (
+              <Brush 
+                dataKey="name" 
+                height={30} 
+                stroke="#8884d8" 
+                startIndex={0} 
+                endIndex={Math.min(5, animatedData.length - 1)}
+                y={320}
+              />
+            )}
           </BarChart>
+        ) : type === 'area' ? (
+          <AreaChart
+            data={animatedData}
+            className="animate-chart-fade-in"
+            margin={{ top: 10, right: 20, left: 10, bottom: showBrush ? 40 : 10 }}
+          >
+            <defs>
+              {fields.map((field, index) => (
+                <linearGradient
+                  key={`area-gradient-${field}`}
+                  id={`areaGradient${index}`}
+                  x1="0" y1="0" x2="0" y2="1"
+                >
+                  <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8} />
+                  <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.1} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.6} />
+            <XAxis
+              dataKey="name"
+              stroke="#aaa"
+              tick={{ fontSize: 11, fill: '#fff' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+            />
+            <YAxis
+              stroke="#aaa"
+              tick={{ fontSize: 11, fill: '#fff' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend
+              formatter={customLegendFormatter}
+              layout="horizontal"
+              verticalAlign="top"
+            />
+            {fields.map((field, index) => (
+              <Area
+                key={field}
+                type="monotone"
+                dataKey={field}
+                name={field}
+                stroke={COLORS[index % COLORS.length]}
+                fillOpacity={1}
+                fill={`url(#areaGradient${index})`}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
+              />
+            ))}
+            {showBrush && (
+              <Brush 
+                dataKey="name" 
+                height={30} 
+                stroke="#8884d8" 
+                startIndex={0} 
+                endIndex={Math.min(5, animatedData.length - 1)}
+              />
+            )}
+          </AreaChart>
+        ) : type === 'scatter' ? (
+          <ScatterChart
+            className="animate-chart-fade-in"
+            margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.6} />
+            <XAxis 
+              dataKey={fields[0]} 
+              name={fields[0]}
+              stroke="#aaa"
+              tick={{ fontSize: 11, fill: '#fff' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+              type="number"
+              label={{ value: fields[0], position: 'insideBottom', offset: -5, fill: '#aaa' }}
+            />
+            <YAxis 
+              dataKey={fields[1]} 
+              name={fields[1]}
+              stroke="#aaa"
+              tick={{ fontSize: 11, fill: '#fff' }}
+              tickLine={{ stroke: '#555' }}
+              axisLine={{ stroke: '#555' }}
+              type="number"
+              label={{ value: fields[1], angle: -90, position: 'insideLeft', fill: '#aaa' }}
+            />
+            <ZAxis dataKey={fields[2] || "id"} range={[100, 500]} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend formatter={customLegendFormatter} />
+            <Scatter 
+              name="Data Points" 
+              data={animatedData} 
+              fill={COLORS[0]} 
+              animationDuration={1500}
+              animationEasing="ease-out"
+              isAnimationActive={isAnimating}
+            >
+              {animatedData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                  style={{
+                    transition: 'filter 0.3s ease',
+                    filter: hoveredDataPoint === index 
+                      ? `drop-shadow(0 0 6px ${COLORS[index % COLORS.length]})` 
+                      : 'none',
+                  }}
+                />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        ) : type === 'radar' ? (
+          <RadarChart 
+            cx="50%" 
+            cy="50%" 
+            outerRadius={150} 
+            width={500} 
+            height={400} 
+            data={animatedData}
+            className="animate-chart-fade-in"
+          >
+            <PolarGrid stroke="#555" />
+            <PolarAngleAxis dataKey="name" tick={{ fontSize: 11, fill: '#fff' }} />
+            <PolarRadiusAxis angle={90} domain={[0, 'auto']} tick={{ fontSize: 11, fill: '#fff' }} />
+            
+            {fields.slice(0, 2).map((field, index) => (
+              <Radar 
+                key={field}
+                name={field} 
+                dataKey={field} 
+                stroke={COLORS[index % COLORS.length]} 
+                fill={COLORS[index % COLORS.length]} 
+                fillOpacity={0.5}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
+              />
+            ))}
+            <Tooltip content={<CustomTooltip />} />
+            <Legend formatter={customLegendFormatter} />
+          </RadarChart>
+        ) : type === 'composed' ? (
+          <ComposedChart
+            data={animatedData}
+            className="animate-chart-fade-in"
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+          >
+            <CartesianGrid stroke="#555" opacity={0.6} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#aaa"
+              tick={{ fontSize: 11, fill: '#fff' }}
+            />
+            <YAxis 
+              stroke="#aaa"
+              tick={{ fontSize: 11, fill: '#fff' }}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend formatter={customLegendFormatter} />
+            <Area 
+              type="monotone" 
+              dataKey={fields[0]} 
+              fill={`url(#areaGradient0)`} 
+              stroke={COLORS[0]} 
+              fillOpacity={0.3}
+              animationDuration={1500}
+              animationEasing="ease-out"
+              isAnimationActive={isAnimating}
+            />
+            <Bar 
+              dataKey={fields[1]} 
+              barSize={20} 
+              fill={`url(#barGradient1)`}
+              animationDuration={1500}
+              animationEasing="ease-out"
+              isAnimationActive={isAnimating}
+            />
+            <Line 
+              type="monotone" 
+              dataKey={fields[2]} 
+              stroke={COLORS[2]} 
+              strokeWidth={2}
+              dot={renderDot}
+              animationDuration={1500}
+              animationEasing="ease-out"
+              isAnimationActive={isAnimating}
+            />
+          </ComposedChart>
         ) : (
           <PieChart 
             className="animate-chart-fade-in"
@@ -416,17 +754,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               outerRadius={120 * animationProgress}
               innerRadius={60 * animationProgress}
               labelLine={false}
-              label={({ name, percent }) => 
-                percent > 0.05 ? `${name} (${(percent * 100).toFixed(0)}%)` : ''
-              }
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
               animationDuration={1500}
               animationEasing="ease-out"
               isAnimationActive={isAnimating}
-              onMouseEnter={(data, index) => {
-                setHoveredDataPoint(index);
-              }}
-              onMouseLeave={() => {
-                setHoveredDataPoint(null);
+              onMouseEnter={(_, index) => {
+                setActiveIndex(index);
               }}
             >
               {chartData.map((entry, index) => (
@@ -434,12 +768,12 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                   key={`cell-${index}`} 
                   fill={`url(#pieGradient${index % COLORS.length})`}
                   style={{
-                    filter: hoveredDataPoint === index 
+                    filter: activeIndex === index 
                       ? `drop-shadow(0 0 10px ${COLORS[index % COLORS.length]})` 
                       : `drop-shadow(0 0 3px ${COLORS[index % COLORS.length]})`,
                     transition: 'filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease',
-                    opacity: hoveredDataPoint !== null && hoveredDataPoint !== index ? 0.6 : 1,
-                    transform: hoveredDataPoint === index ? 'scale(1.05)' : 'scale(1)'
+                    opacity: activeIndex !== null && activeIndex !== index ? 0.6 : 1,
+                    transform: activeIndex === index ? 'scale(1.05)' : 'scale(1)'
                   }}
                 />
               ))}
