@@ -221,11 +221,12 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   };
 
   const renderDot = (props: any) => {
-    const { cx, cy, index } = props;
+    const { cx, cy, index, dataKey } = props;
     const isHovered = hoveredDataPoint === index;
     
     return (
       <circle 
+        key={`dot-${dataKey}-${index}`}
         cx={cx} 
         cy={cy} 
         r={isHovered ? 6 : 4}
@@ -509,7 +510,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                     key={`cell-${i}`}
                     filter={hoveredDataPoint === i ? `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]})` : undefined}
                     style={{
-                      transition: 'filter 0.3s ease, opacity 0.3s ease',
+                      transition: 'filter 0.3s ease',
                       opacity: hoveredDataPoint !== null && hoveredDataPoint !== i ? 0.7 : 1
                     }}
                   />
@@ -616,11 +617,25 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               type="number"
               label={{ value: fields[1], angle: -90, position: 'insideLeft', fill: '#aaa' }}
             />
-            <ZAxis dataKey={fields[2] || "id"} range={[100, 500]} />
+            {fields.length > 2 && (
+              <ZAxis 
+                dataKey={fields[2]} 
+                range={[100, 500]} 
+                name={fields[2]}
+              />
+            )}
             <Tooltip content={<CustomTooltip />} />
-            <Legend formatter={customLegendFormatter} />
+            <Legend 
+              formatter={customLegendFormatter}
+              wrapperStyle={{
+                paddingTop: 10,
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                whiteSpace: 'nowrap'
+              }}
+            />
             <Scatter 
-              name="Data Points" 
+              name={fields[0] || "Data Points"} 
               data={animatedData} 
               fill={COLORS[0]} 
               animationDuration={1500}
@@ -629,7 +644,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             >
               {animatedData.map((entry, index) => (
                 <Cell 
-                  key={`cell-${index}`}
+                  key={`scatter-cell-${index}`}
                   fill={COLORS[index % COLORS.length]}
                   style={{
                     transition: 'filter 0.3s ease',
