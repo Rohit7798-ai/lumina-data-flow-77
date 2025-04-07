@@ -265,6 +265,9 @@ const DataVisualization = ({
       maxValue = Math.max(maxValue, point.value);
     });
     
+    // Calculate value range for use in coloring
+    const calculatedValueRange = maxValue - minValue;
+    
     // Create appropriate visualization based on type
     if (type === 'scatter') {
       // Scatter plot
@@ -523,12 +526,11 @@ const DataVisualization = ({
       // Contour plot
       // Sort data points by value to create contour levels
       const sortedPoints = [...data.points].sort((a, b) => a.value - b.value);
-      const valueRange = maxValue - minValue;
       
       // Create contour levels
       const numLevels = 10;
       const levels = Array.from({ length: numLevels }, (_, i) => 
-        minValue + (valueRange * (i / (numLevels - 1)))
+        minValue + (calculatedValueRange * (i / (numLevels - 1)))
       );
       
       levels.forEach((level, levelIndex) => {
@@ -536,7 +538,7 @@ const DataVisualization = ({
         
         // Find points close to this contour level
         sortedPoints.forEach(point => {
-          if (Math.abs(point.value - level) < valueRange / (2 * numLevels)) {
+          if (Math.abs(point.value - level) < calculatedValueRange / (2 * numLevels)) {
             contourPoints.push(new THREE.Vector3(
               point.x * 2, 
               0.05 * levelIndex, // Small height offset for each level
@@ -606,7 +608,7 @@ const DataVisualization = ({
           false // closed
         );
         
-        const color = getColorByScheme(minValue + (i / (numCurves - 1)) * valueRange, minValue, maxValue);
+        const color = getColorByScheme(minValue + (i / (numCurves - 1)) * calculatedValueRange, minValue, maxValue);
         const material = new THREE.MeshPhongMaterial({
           color: color,
           transparent: true,

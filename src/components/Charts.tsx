@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LineChart, BarChart, PieChart, ScatterChart, AreaChart, ComposedChart,
@@ -52,7 +51,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   const [chartType, setChartType] = useState<ChartsProps['type']>(type);
   
-  // When type prop changes, update the internal chartType state
   useEffect(() => {
     setChartType(type);
   }, [type]);
@@ -305,7 +303,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     );
   };
 
-  // Chart configuration object
   const chartConfig = {
     line: {
       title: "Line Chart",
@@ -353,7 +350,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
         hasData={chartData.length > 0}
       />
       
-      {/* Chart title and subtitle */}
       {showAdvancedControls && (
         <div className="mb-4 text-left">
           <h3 className="text-sm font-medium text-white">
@@ -869,14 +865,17 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
         )}
       </ResponsiveContainer>
       
-      {/* Stats overlay */}
       {showAdvancedControls && chartType !== 'pie' && chartType !== 'radar' && (
         <div className="absolute top-12 right-4 bg-black/50 backdrop-blur-sm rounded-md p-2 text-xs text-white/70 pointer-events-none">
           <div>Records: {chartData.length}</div>
           <div>Series: {fields.length}</div>
           {fields.length > 0 && chartData.length > 0 && (
             <div>
-              Avg {fields[0]}: {(chartData.reduce((sum, item) => sum + (Number(item[fields[0]]) || 0), 0) / chartData.length).toFixed(1)}
+              Avg {fields[0]}: {
+                chartData.length > 0 && fields.length > 0
+                ? (chartData.reduce((sum, item) => sum + (Number(item[fields[0]]) || 0), 0) / chartData.length).toFixed(1)
+                : '0'
+              }
             </div>
           )}
         </div>
