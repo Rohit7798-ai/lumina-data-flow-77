@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
 import DataVisualization from '@/components/DataVisualization';
@@ -10,7 +9,7 @@ import useDataProcessing from '@/hooks/useDataProcessing';
 import { 
   BarChart3, PieChart, Database, Github, SunMoon, 
   LineChart, Info, Filter as FilterIcon, 
-  AreaChart, Scatter, Radar, Layout, Download, Share2, Settings
+  AreaChart, ChartScatter, Radar, Layout, Download, Share2, Settings
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -335,7 +334,7 @@ const Index = () => {
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem id="scatter" value="scatter" />
                               <label htmlFor="scatter" className="text-sm cursor-pointer flex items-center gap-1">
-                                <Scatter className="h-4 w-4 text-neon-yellow" />
+                                <ChartScatter className="h-4 w-4 text-neon-yellow" />
                                 <span>Scatter</span>
                               </label>
                             </div>

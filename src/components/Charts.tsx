@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LineChart, BarChart, PieChart, ScatterChart, AreaChart, ComposedChart,
@@ -9,7 +8,7 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import { TooltipProvider, Tooltip as UITooltip, TooltipTrigger, EnhancedTooltipContent } from '@/components/ui/tooltip';
-import { Info, Layers, BarChart as BarChartIcon, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
+import { Info, Layers, BarChart as BarChartIcon, LineChart as LineChartIcon, PieChart as PieChartIcon, ChartScatter } from 'lucide-react';
 
 type ChartsProps = {
   data: Array<Record<string, any>>;
@@ -291,7 +290,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     );
   };
 
-  // Define control buttons at the top for Tableau/Power BI style UI
   const chartControls = (
     <div className="flex flex-wrap justify-end gap-2 mb-4">
       <TooltipProvider>
@@ -383,7 +381,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 paddingRight: 10
               }}
             />
-            {/* Add reference lines for Power BI style analysis */}
             <ReferenceLine y={animatedData.reduce((sum, item) => sum + (item[fields[0]] || 0), 0) / animatedData.length} 
                       stroke="#fff" strokeDasharray="3 3" 
                       label={{ value: 'Average', position: 'right', fill: '#fff' }} />
@@ -479,7 +476,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               }}
             />
             
-            {/* Add a reference area for highlighting threshold - Power BI style */}
             <ReferenceArea y1={0} y2={100} fill="#fff" fillOpacity={0.05} />
             
             {fields.map((field, index) => (
@@ -501,7 +497,6 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
                 onMouseLeave={() => {
                   setHoveredDataPoint(null);
                 }}
-                // Power BI style custom label
                 label={{
                   position: 'top',
                   fill: '#fff',
