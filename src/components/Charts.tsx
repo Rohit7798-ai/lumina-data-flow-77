@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LineChart, BarChart, PieChart, ScatterChart, AreaChart, ComposedChart,
@@ -7,8 +8,14 @@ import {
   PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
 import { cn } from '@/lib/utils';
-import { TooltipProvider, Tooltip as UITooltip, TooltipTrigger, EnhancedTooltipContent } from '@/components/ui/tooltip';
-import { Info, Layers, BarChart as BarChartIcon, LineChart as LineChartIcon, PieChart as PieChartIcon, ChartScatter } from 'lucide-react';
+import { ChartTooltip } from '@/components/ChartTooltip';
+import { ChartLegend } from '@/components/ChartLegend';
+import { ChartControls } from '@/components/ChartControls';
+import {
+  ChartContainer,
+  ChartTooltip as ShadcnTooltip,
+  ChartTooltipContent
+} from '@/components/ui/chart';
 
 type ChartsProps = {
   data: Array<Record<string, any>>;
@@ -42,6 +49,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
   const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showBrush, setShowBrush] = useState(false);
+  const [showAdvancedControls, setShowAdvancedControls] = useState(false);
+  const [chartType, setChartType] = useState<ChartsProps['type']>(type);
+  
+  // When type prop changes, update the internal chartType state
+  useEffect(() => {
+    setChartType(type);
+  }, [type]);
   
   useEffect(() => {
     if (!data.length) return;
@@ -67,12 +81,12 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     return () => {
       setIsAnimating(false);
     };
-  }, [data, type]);
+  }, [data, chartType]);
   
   const chartData = useMemo(() => {
     if (!data.length) return [];
     
-    if (type === 'pie') {
+    if (chartType === 'pie') {
       const firstRow = data[0];
       const keys = Object.keys(firstRow).filter(key => 
         typeof firstRow[key] === 'number' || !isNaN(Number(firstRow[key]))
@@ -85,7 +99,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       }));
     }
     
-    if (type === 'radar') {
+    if (chartType === 'radar') {
       return data.slice(0, 8).map((row, index) => {
         const result: Record<string, any> = { name: `Item ${index + 1}` };
         
@@ -128,7 +142,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       
       return result;
     });
-  }, [data, type]);
+  }, [data, chartType]);
   
   const fields = useMemo(() => {
     if (!chartData.length) return [];
@@ -291,26 +305,37 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     );
   };
 
-  const chartControls = (
-    <div className="flex flex-wrap justify-end gap-2 mb-4">
-      <TooltipProvider>
-        <UITooltip>
-          <TooltipTrigger asChild>
-            <button 
-              className="glass p-1.5 rounded-md hover:bg-white/10 text-white text-sm flex items-center gap-1.5 transition-colors"
-              onClick={() => setShowBrush(!showBrush)}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>{showBrush ? "Hide Time Selector" : "Show Time Selector"}</span>
-            </button>
-          </TooltipTrigger>
-          <EnhancedTooltipContent>
-            <p className="text-xs text-white">Enable time range selection for detailed analysis</p>
-          </EnhancedTooltipContent>
-        </UITooltip>
-      </TooltipProvider>
-    </div>
-  );
+  // Chart configuration object
+  const chartConfig = {
+    line: {
+      title: "Line Chart",
+      subtitle: "Showing trends over time or categories"
+    },
+    bar: {
+      title: "Bar Chart",
+      subtitle: "Comparing values across categories"
+    },
+    pie: {
+      title: "Pie Chart",
+      subtitle: "Showing proportions of a whole"
+    },
+    scatter: {
+      title: "Scatter Plot",
+      subtitle: "Plotting points to show correlation"
+    },
+    area: {
+      title: "Area Chart",
+      subtitle: "Visualizing volume across time"
+    },
+    radar: {
+      title: "Radar Chart",
+      subtitle: "Comparing multiple variables"
+    },
+    composed: {
+      title: "Composed Chart",
+      subtitle: "Combining multiple chart types"
+    }
+  };
 
   return (
     <div className={cn(
@@ -318,10 +343,30 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       "transition-all duration-500 ease-out hover:shadow-[0_0_30px_rgba(139,92,246,0.3)]",
       className
     )}>
-      {chartControls}
+      <ChartControls 
+        chartType={chartType}
+        onTypeChange={(type) => setChartType(type as ChartsProps['type'])}
+        onToggleBrush={() => setShowBrush(!showBrush)}
+        onToggleControls={() => setShowAdvancedControls(!showAdvancedControls)}
+        showBrush={showBrush}
+        showControls={showAdvancedControls}
+        hasData={chartData.length > 0}
+      />
+      
+      {/* Chart title and subtitle */}
+      {showAdvancedControls && (
+        <div className="mb-4 text-left">
+          <h3 className="text-sm font-medium text-white">
+            {chartConfig[chartType]?.title || 'Data Visualization'}
+          </h3>
+          <p className="text-xs text-white/60">
+            {chartConfig[chartType]?.subtitle || 'Interactive data visualization'}
+          </p>
+        </div>
+      )}
       
       <ResponsiveContainer width="100%" height="100%">
-        {type === 'line' ? (
+        {chartType === 'line' ? (
           <LineChart 
             data={animatedData}
             className="animate-chart-fade-in"
@@ -417,7 +462,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               />
             )}
           </LineChart>
-        ) : type === 'bar' ? (
+        ) : chartType === 'bar' ? (
           <BarChart 
             data={animatedData}
             className="animate-chart-fade-in"
@@ -529,7 +574,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               />
             )}
           </BarChart>
-        ) : type === 'area' ? (
+        ) : chartType === 'area' ? (
           <AreaChart
             data={animatedData}
             className="animate-chart-fade-in"
@@ -591,7 +636,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               />
             )}
           </AreaChart>
-        ) : type === 'scatter' ? (
+        ) : chartType === 'scatter' ? (
           <ScatterChart
             className="animate-chart-fade-in"
             margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
@@ -656,7 +701,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               ))}
             </Scatter>
           </ScatterChart>
-        ) : type === 'radar' ? (
+        ) : chartType === 'radar' ? (
           <RadarChart 
             cx="50%" 
             cy="50%" 
@@ -686,7 +731,7 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             <Tooltip content={<CustomTooltip />} />
             <Legend formatter={customLegendFormatter} />
           </RadarChart>
-        ) : type === 'composed' ? (
+        ) : chartType === 'composed' ? (
           <ComposedChart
             data={animatedData}
             className="animate-chart-fade-in"
@@ -704,34 +749,43 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend formatter={customLegendFormatter} />
-            <Area 
-              type="monotone" 
-              dataKey={fields[0]} 
-              fill={`url(#areaGradient0)`} 
-              stroke={COLORS[0]} 
-              fillOpacity={0.3}
-              animationDuration={1500}
-              animationEasing="ease-out"
-              isAnimationActive={isAnimating}
-            />
-            <Bar 
-              dataKey={fields[1]} 
-              barSize={20} 
-              fill={`url(#barGradient1)`}
-              animationDuration={1500}
-              animationEasing="ease-out"
-              isAnimationActive={isAnimating}
-            />
-            <Line 
-              type="monotone" 
-              dataKey={fields[2]} 
-              stroke={COLORS[2]} 
-              strokeWidth={2}
-              dot={renderDot}
-              animationDuration={1500}
-              animationEasing="ease-out"
-              isAnimationActive={isAnimating}
-            />
+            
+            {fields.length > 0 && (
+              <Area 
+                type="monotone" 
+                dataKey={fields[0]} 
+                fill={`url(#areaGradient0)`} 
+                stroke={COLORS[0]} 
+                fillOpacity={0.3}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
+              />
+            )}
+            
+            {fields.length > 1 && (
+              <Bar 
+                dataKey={fields[1]} 
+                barSize={20} 
+                fill={`url(#barGradient1)`}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
+              />
+            )}
+            
+            {fields.length > 2 && (
+              <Line 
+                type="monotone" 
+                dataKey={fields[2]} 
+                stroke={COLORS[2]} 
+                strokeWidth={2}
+                dot={renderDot}
+                animationDuration={1500}
+                animationEasing="ease-out"
+                isAnimationActive={isAnimating}
+              />
+            )}
           </ComposedChart>
         ) : (
           <PieChart 
@@ -814,6 +868,19 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
           </PieChart>
         )}
       </ResponsiveContainer>
+      
+      {/* Stats overlay */}
+      {showAdvancedControls && chartType !== 'pie' && chartType !== 'radar' && (
+        <div className="absolute top-12 right-4 bg-black/50 backdrop-blur-sm rounded-md p-2 text-xs text-white/70 pointer-events-none">
+          <div>Records: {chartData.length}</div>
+          <div>Series: {fields.length}</div>
+          {fields.length > 0 && chartData.length > 0 && (
+            <div>
+              Avg {fields[0]}: {(chartData.reduce((sum, item) => sum + (Number(item[fields[0]]) || 0), 0) / chartData.length).toFixed(1)}
+            </div>
+          )}
+        </div>
+      )}
       
       {isAnimating && (
         <div className="absolute top-2 right-2 glass px-2 py-1 rounded-md text-xs text-white/80 animate-pulse">
