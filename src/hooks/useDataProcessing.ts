@@ -43,7 +43,9 @@ export const useDataProcessing = () => {
     
     // Extract column names for filtering
     if (data.length > 0) {
+      // Get all available columns for analysis and filtering
       setAvailableColumns(Object.keys(data[0]));
+      console.log("Available columns for analysis:", Object.keys(data[0]));
     }
   };
 
@@ -110,14 +112,16 @@ export const useDataProcessing = () => {
   useEffect(() => {
     if (rawData.length > 0 && isProcessing) {
       try {
-        // Compute statistics
+        // Compute statistics for column analysis
         const stats = calculateStatistics(rawData);
         // Ensure stats is always an array before setting it
         if (Array.isArray(stats)) {
           setStatistics(stats);
+          console.log("Column statistics calculated:", stats);
         } else {
           console.error('Statistics is not an array:', stats);
           setStatistics([]);
+          toast.error('Error calculating column statistics');
         }
         
         // Prepare data for 3D visualization
