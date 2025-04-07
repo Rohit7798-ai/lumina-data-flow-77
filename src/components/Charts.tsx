@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LineChart, BarChart, PieChart, ScatterChart, AreaChart, ComposedChart,
@@ -873,7 +874,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             <div>
               Avg {fields[0]}: {
                 chartData.length > 0 && fields.length > 0
-                ? (chartData.reduce((sum, item) => sum + (Number(item[fields[0]]) || 0), 0) / chartData.length).toFixed(1)
+                ? (chartData.reduce((sum: number, item: any) => {
+                    // Fix the type issue by ensuring we're adding numbers
+                    return sum + (Number(item[fields[0]]) || 0);
+                  }, 0) / chartData.length).toFixed(1)
                 : '0'
               }
             </div>
