@@ -869,23 +869,71 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
       </ResponsiveContainer>
       
       {showAdvancedControls && chartType !== 'pie' && chartType !== 'radar' && (
-        <div className="absolute top-12 right-4 bg-black/50 backdrop-blur-sm rounded-md p-2 text-xs text-white/70 pointer-events-none">
-          <div>Records: {chartData.length}</div>
-          <div>Series: {fields.length}</div>
-          {fields.length > 0 && chartData.length > 0 && (
-            <div>
-              Avg {fields[0]}: {
-                chartData.length > 0 && fields.length > 0
-                ? (chartData.reduce((sum, item) => {
-                    const value = typeof item[fields[0]] === 'number' ? 
-                      item[fields[0]] : 
-                      (Number(item[fields[0]]) || 0);
-                    return sum + value;
-                  }, 0) / chartData.length).toFixed(1)
-                : '0'
-              }
-            </div>
-          )}
+        <div className="absolute bottom-2 left-2 right-2 glass rounded-md p-2 text-xs text-white/70 grid grid-cols-2 gap-x-4 gap-y-1">
+          <div>
+            <span className="text-white/50 mr-1">Dataset:</span>
+            {chartData.length} records
+          </div>
+          <div>
+            <span className="text-white/50 mr-1">Fields:</span>
+            {fields.length}
+          </div>
+          <div>
+            <span className="text-white/50 mr-1">
+              Avg {fields[0]}:
+            </span>
+            {
+              chartData.length > 0 && fields.length > 0
+              ? (() => {
+                  let sum = 0;
+                  let count = 0;
+                  
+                  for (const item of chartData) {
+                    if (typeof item === 'object' && item !== null && fields[0] in item) {
+                      const numValue = typeof item[fields[0]] === 'number' 
+                        ? item[fields[0]] 
+                        : Number(item[fields[0]]);
+                        
+                      if (!isNaN(numValue)) {
+                        sum += numValue;
+                        count++;
+                      }
+                    }
+                  }
+                  
+                  return count > 0 ? (sum / count).toFixed(1) : '0';
+                })()
+              : '0'
+            }
+          </div>
+          <div>
+            <span className="text-white/50 mr-1">
+              {type === 'pie' ? 'Avg Value:' : `Max ${fields[0]}:`}
+            </span>
+            {
+              chartData.length > 0 && fields.length > 0
+              ? type === 'pie'
+                ? calculatePieAverage(pieData).toFixed(1)
+                : (() => {
+                    let max = -Infinity;
+                    
+                    for (const item of chartData) {
+                      if (typeof item === 'object' && item !== null && fields[0] in item) {
+                        const numValue = typeof item[fields[0]] === 'number' 
+                          ? item[fields[0]] 
+                          : Number(item[fields[0]]);
+                          
+                        if (!isNaN(numValue) && numValue > max) {
+                          max = numValue;
+                        }
+                      }
+                    }
+                    
+                    return max !== -Infinity ? max.toFixed(1) : '0';
+                  })()
+              : '0'
+            }
+          </div>
         </div>
       )}
       

@@ -21,6 +21,7 @@ const TooltipContent = React.forwardRef<
       "z-50 overflow-hidden rounded-md glass border border-white/30 px-3 py-1.5 text-sm text-white shadow-xl backdrop-blur-sm",
       "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
       "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      "transition-all duration-200 hover:border-white/40 hover:shadow-glow",
       className
     )}
     {...props}
@@ -44,7 +45,7 @@ const EnhancedTooltipContent = React.forwardRef<
       "z-50 overflow-hidden rounded-md glass border border-white/30 shadow-xl backdrop-blur-sm",
       "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
       "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-      "min-w-[200px] max-w-[280px] p-0",
+      "min-w-[200px] max-w-[280px] p-0 transition-all duration-200 hover:border-white/40 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]",
       className
     )}
     {...props}
@@ -58,7 +59,7 @@ const EnhancedTooltipContent = React.forwardRef<
       {metrics && metrics.length > 0 && (
         <div className="space-y-1.5">
           {metrics.map((metric, index) => (
-            <div key={index} className="flex items-center justify-between gap-8">
+            <div key={index} className="flex items-center justify-between gap-8 animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
               <div className="flex items-center gap-1.5">
                 {metric.color && (
                   <div 
