@@ -913,7 +913,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
             {
               chartData.length > 0 && fields.length > 0
               ? type === 'pie'
-                ? calculatePieAverage(pieData).toFixed(1)
+                ? (() => {
+                    // Calculate the average for pie chart data
+                    if (!chartData.length) return 0;
+                    
+                    const total = chartData.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : 0), 0);
+                    return (total / chartData.length).toFixed(1);
+                  })()
                 : (() => {
                     let max = -Infinity;
                     
