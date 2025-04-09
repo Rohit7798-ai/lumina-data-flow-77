@@ -914,11 +914,21 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               chartData.length > 0 && fields.length > 0
               ? type === 'pie'
                 ? (() => {
-                    // Calculate the average for pie chart data
-                    if (!chartData.length) return 0;
+                    // Calculate the average for pie chart data correctly
+                    if (!chartData.length) return '0';
                     
-                    const total = chartData.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : 0), 0);
-                    return (total / chartData.length).toFixed(1);
+                    let totalValue = 0;
+                    let count = 0;
+                    
+                    // Properly access the 'value' property from each pie chart data item
+                    for (const item of chartData) {
+                      if (item && typeof item.value === 'number') {
+                        totalValue += item.value;
+                        count++;
+                      }
+                    }
+                    
+                    return count > 0 ? (totalValue / count).toFixed(1) : '0';
                   })()
                 : (() => {
                     let max = -Infinity;
