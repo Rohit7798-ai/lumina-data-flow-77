@@ -152,6 +152,13 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
     ).slice(0, 5);
   }, [chartData]);
   
+  const calculatePieAverage = (pieData: Array<{ name: string; value: number; fullName: string }>) => {
+    if (!pieData.length) return 0;
+    
+    const total = pieData.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : 0), 0);
+    return total / pieData.length;
+  };
+
   if (isLoading) {
     return (
       <div className={cn(
@@ -593,14 +600,10 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               dataKey="name"
               stroke="#aaa"
               tick={{ fontSize: 11, fill: '#fff' }}
-              tickLine={{ stroke: '#555' }}
-              axisLine={{ stroke: '#555' }}
             />
             <YAxis
               stroke="#aaa"
               tick={{ fontSize: 11, fill: '#fff' }}
-              tickLine={{ stroke: '#555' }}
-              axisLine={{ stroke: '#555' }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend
@@ -874,8 +877,9 @@ const Charts = ({ data, type, className, isLoading = false }: ChartsProps) => {
               Avg {fields[0]}: {
                 chartData.length > 0 && fields.length > 0
                 ? (chartData.reduce((sum, item) => {
-                    const value = typeof item === 'object' && item !== null ? 
-                      Number(item[fields[0]]) || 0 : 0;
+                    const value = typeof item[fields[0]] === 'number' ? 
+                      item[fields[0]] : 
+                      (Number(item[fields[0]]) || 0);
                     return sum + value;
                   }, 0) / chartData.length).toFixed(1)
                 : '0'
