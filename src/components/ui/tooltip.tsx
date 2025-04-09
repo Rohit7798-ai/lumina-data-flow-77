@@ -30,7 +30,8 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 // Enhanced tooltip with title and details - similar to Power BI tooltips
-const EnhancedTooltipContent = React.forwardRef<
+// Optimized for real-time data updates with React.memo
+const EnhancedTooltipContent = React.memo(React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> & {
     title?: string;
@@ -82,7 +83,7 @@ const EnhancedTooltipContent = React.forwardRef<
       </div>
     )}
   </TooltipPrimitive.Content>
-))
+)))
 EnhancedTooltipContent.displayName = "EnhancedTooltipContent"
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, EnhancedTooltipContent }

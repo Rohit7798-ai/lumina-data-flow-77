@@ -8,7 +8,8 @@ const HoverCard = HoverCardPrimitive.Root
 
 const HoverCardTrigger = HoverCardPrimitive.Trigger
 
-const HoverCardContent = React.forwardRef<
+// Optimized HoverCardContent with performance enhancements for real-time updates
+const HoverCardContent = React.memo(React.forwardRef<
   React.ElementRef<typeof HoverCardPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof HoverCardPrimitive.Content>
 >(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
@@ -23,11 +24,16 @@ const HoverCardContent = React.forwardRef<
       "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
       "backdrop-blur-md bg-black/50 border-white/10 transition-all duration-200",
       "hover:bg-black/60 hover:border-white/20 hover:shadow-lg hover:shadow-primary/10",
+      // Added will-change for better rendering performance
+      "will-change-transform will-change-opacity",
       className
     )}
+    // Add optimizations for real-time updates
+    collisionPadding={8}
+    avoidCollisions={true}
     {...props}
   />
-))
+)))
 HoverCardContent.displayName = HoverCardPrimitive.Content.displayName
 
 export { HoverCard, HoverCardTrigger, HoverCardContent }
