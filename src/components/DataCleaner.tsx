@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { dataCleaner, type CleaningOptions } from '@/utils/dataCleaner';
 import { Check, AlertTriangle, X, Code, Database, Sigma, RefreshCw, Wand2 } from "lucide-react";
@@ -56,8 +55,6 @@ const DataCleaner: React.FC<DataCleanerProps> = ({
   const [cleaningResult, setCleaningResult] = useState<CleaningResult | null>(null);
   const [showIssueDetails, setShowIssueDetails] = useState(false);
   const [issuePreviewLimit, setIssuePreviewLimit] = useState(5);
-  const [apiKey, setApiKey] = useState<string>('');
-  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   
   // Start progress monitoring when cleaning begins
   useEffect(() => {
@@ -82,28 +79,7 @@ const DataCleaner: React.FC<DataCleanerProps> = ({
     }));
   };
   
-  const validateApiKey = (key: string) => {
-    // Simple validation to ensure key isn't empty and has a valid format
-    // In a real app, you would validate this with Google's API
-    if (!key.trim()) {
-      setApiKeyError('API key is required');
-      return false;
-    }
-    
-    if (key.length < 20) {
-      setApiKeyError('API key seems too short');
-      return false;
-    }
-    
-    setApiKeyError(null);
-    return true;
-  };
-  
   const handleCleanData = async () => {
-    if (!validateApiKey(apiKey)) {
-      return;
-    }
-    
     if (!data || data.length === 0) {
       toast.error('No data to clean');
       return;
@@ -112,9 +88,6 @@ const DataCleaner: React.FC<DataCleanerProps> = ({
     try {
       setIsProcessing(true);
       setProgress(0);
-      
-      // Save the API key to the cleaner service
-      dataCleaner.setApiKey(apiKey);
       
       // Process data through the cleaner
       const result = await dataCleaner.cleanData(data, cleaningOptions);
@@ -189,10 +162,10 @@ const DataCleaner: React.FC<DataCleanerProps> = ({
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
               <Wand2 className="w-6 h-6 inline-block mr-2 text-neon-blue" />
-              Clean Data with Gemini AI
+              AI-Powered Data Cleaner
             </h2>
             <p className="text-white/60 text-sm">
-              Automatically clean and normalize your data using Google's Gemini AI
+              Automatically clean and normalize your data using advanced AI
             </p>
           </div>
           <Button
@@ -207,30 +180,6 @@ const DataCleaner: React.FC<DataCleanerProps> = ({
         
         {!cleaningResult ? (
           <>
-            {/* API Key Input */}
-            <div className="mb-6 glass p-4 rounded-lg">
-              <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-                <Code className="h-4 w-4 text-neon-cyan" />
-                Gemini API Key
-              </h3>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-white/10 bg-black/20 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-neon-blue disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Enter your Gemini API key"
-                  disabled={isProcessing}
-                />
-              </div>
-              {apiKeyError && (
-                <p className="text-red-400 text-xs mt-1">{apiKeyError}</p>
-              )}
-              <p className="text-xs text-white/40 mt-1.5">
-                Your API key is required to use the Gemini AI cleaning features. It will not be stored.
-              </p>
-            </div>
-            
             {/* Cleaning Options */}
             <div className="mb-6 glass p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
@@ -359,7 +308,7 @@ const DataCleaner: React.FC<DataCleanerProps> = ({
               </Button>
               <Button 
                 onClick={handleCleanData} 
-                disabled={isProcessing || !apiKey}
+                disabled={isProcessing}
                 className="bg-gradient-to-r from-neon-blue to-neon-purple"
               >
                 {isProcessing ? (

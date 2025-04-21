@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FileUp, FileType, X, AlertCircle, Check, Wand2 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +25,6 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   ];
   
-  // Animation on mount
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
@@ -75,7 +73,6 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
     setIsProcessing(true);
     setUploadProgress(0);
     
-    // Simulate progress for better UX
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         const newProgress = prev + Math.random() * 15;
@@ -100,17 +97,13 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
         return rowData;
       });
       
-      // Complete the progress animation
       clearInterval(progressInterval);
       setUploadProgress(100);
       
-      // Store the parsed data
       setParsedData(data);
-      
-      // Show the data cleaning UI
       setShowDataCleaner(true);
       setIsProcessing(false);
-      toast.success("Data loaded successfully. You can now clean your data!");
+      toast.success("Data loaded successfully. Starting automatic data cleaning...");
       
     } catch (error) {
       clearInterval(progressInterval);
@@ -132,7 +125,6 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
 
   const handleCancelCleaning = () => {
     setShowDataCleaner(false);
-    // Process the uncleaned data directly if user cancels cleaning
     if (parsedData.length > 0 && file) {
       onDataProcessed(parsedData, file.name);
     }
