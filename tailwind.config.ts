@@ -159,6 +159,12 @@ export default {
 				'text-shimmer': {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' }
+				},
+				'clean-data': {
+					'0%': { opacity: '0.3', filter: 'blur(2px)' },
+					'50%': { opacity: '0.7', filter: 'blur(1px) brightness(1.2)' },
+					'75%': { filter: 'blur(0) brightness(1.5) drop-shadow(0 0 5px rgba(139, 92, 246, 0.5))' },
+					'100%': { opacity: '1', filter: 'none' }
 				}
 			},
 			animation: {
@@ -174,7 +180,8 @@ export default {
 				'zoom-in': 'zoom-in 0.3s ease-out',
 				'bounce': 'bounce 1s infinite',
 				'ripple': 'ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite',
-				'text-shimmer': 'text-shimmer 3s ease-in-out infinite'
+				'text-shimmer': 'text-shimmer 3s ease-in-out infinite',
+				'clean-data': 'clean-data 1.5s ease-in-out forwards'
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

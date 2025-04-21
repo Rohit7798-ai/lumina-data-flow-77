@@ -239,6 +239,15 @@
     animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   }
   
+  /* Data cleaning related utilities */
+  .animate-clean {
+    animation: clean-data 1.5s ease-in-out forwards;
+  }
+  
+  .issue-card {
+    @apply glass p-2 rounded-md border-l-2 transition-all;
+  }
+  
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
   }
@@ -349,4 +358,22 @@
 @keyframes typing {
   from { width: 0 }
   to { width: 100% }
+}
+
+@keyframes clean-data {
+  0% {
+    opacity: 0.3;
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.7;
+    filter: blur(1px) brightness(1.2);
+  }
+  75% {
+    filter: blur(0) brightness(1.5) drop-shadow(0 0 5px rgba(139, 92, 246, 0.5));
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+  }
 }

@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileUp, FileType, X, AlertCircle, Check } from "lucide-react";
+import { Upload, FileUp, FileType, X, AlertCircle, Check, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import DataCleaner from './DataCleaner';
 
 type FileUploadProps = {
   onDataProcessed: (data: any[], fileName: string) => void;
@@ -15,6 +16,8 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [parsedData, setParsedData] = useState<Record<string, any>[]>([]);
+  const [showDataCleaner, setShowDataCleaner] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const supportedFileTypes = [
@@ -101,12 +104,13 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
       clearInterval(progressInterval);
       setUploadProgress(100);
       
-      // Small delay to show the 100% progress
-      setTimeout(() => {
-        onDataProcessed(data, file.name);
-        toast.success("Data processed successfully!");
-        setIsProcessing(false);
-      }, 500);
+      // Store the parsed data
+      setParsedData(data);
+      
+      // Show the data cleaning UI
+      setShowDataCleaner(true);
+      setIsProcessing(false);
+      toast.success("Data loaded successfully. You can now clean your data!");
       
     } catch (error) {
       clearInterval(progressInterval);
@@ -126,21 +130,43 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
     }
   };
 
+  const handleCancelCleaning = () => {
+    setShowDataCleaner(false);
+    // Process the uncleaned data directly if user cancels cleaning
+    if (parsedData.length > 0 && file) {
+      onDataProcessed(parsedData, file.name);
+    }
+  };
+  
+  const handleDataCleaned = (cleanedData: Record<string, any>[], fileName: string) => {
+    setShowDataCleaner(false);
+    onDataProcessed(cleanedData, fileName);
+    toast.success("Cleaned data processed successfully!");
+  };
+
   return (
     <div className={cn(
       "w-full max-w-3xl mx-auto transition-all duration-700 transform",
       isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
     )}>
-      <div 
-        className={cn(
-          "relative p-8 rounded-xl glass transition-all duration-300 border-2 border-dashed",
-          isDragging ? "border-neon-blue scale-[1.02] shadow-lg shadow-neon-blue/20" : "border-white/20", 
-          file ? "border-solid border-neon-purple/50" : ""
-        )}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
+      {showDataCleaner && parsedData.length > 0 && file ? (
+        <DataCleaner 
+          data={parsedData}
+          fileName={file.name}
+          onDataCleaned={handleDataCleaned}
+          onCancel={handleCancelCleaning}
+        />
+      ) : (
+        <div 
+          className={cn(
+            "relative p-8 rounded-xl glass transition-all duration-300 border-2 border-dashed",
+            isDragging ? "border-neon-blue scale-[1.02] shadow-lg shadow-neon-blue/20" : "border-white/20", 
+            file ? "border-solid border-neon-purple/50" : ""
+          )}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
         <input
           type="file"
           ref={fileInputRef}
@@ -236,6 +262,7 @@ const FileUpload = ({ onDataProcessed }: FileUploadProps) => {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };
